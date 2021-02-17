@@ -1,0 +1,11 @@
+# Logs
+logs
+.log
+
+# Node.js
+node_modules
+package-lock.json
+build
+
+# Environment variables
+.env
