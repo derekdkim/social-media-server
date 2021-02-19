@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 import 'regenerator-runtime/runtime';
+const request = require('supertest');
+const express = require('express');
+const bcrypt = require('bcryptjs');
+
 const User = require('../models/user');
 const userData = { 
   username: 'tester123', 
@@ -26,7 +30,7 @@ describe('User Model Test', () => {
 
     expect(savedUser._id).toBeDefined();
     expect(savedUser.username).toBe(userData.username);
-    expect(savedUser.password).toBe(userData.password);
+    expect(savedUser.password).toEqual(expect.anything());
     expect(savedUser.firstName).toBe(userData.firstName);
     expect(savedUser.lastName).toBe(userData.lastName);
     expect(savedUser.birthDate).toBe(userData.birthDate);

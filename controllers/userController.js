@@ -1,6 +1,7 @@
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+require('dotenv').config();
 
 exports.sign_up_GET = (req, res, next) => {
   res.send('GET sign up');
@@ -48,7 +49,7 @@ exports.log_in_POST = (req, res, next) => {
           res.send(err);
         }
 
-        const token = jwt.sign(user.toJSON(), 'TOP_SECRET');
+        const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET, { expiresIn: 86400 * 30 });
         return res.json({ user, token });
       });
     }
