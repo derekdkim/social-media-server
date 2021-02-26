@@ -8,16 +8,16 @@ const passport = require('passport');
 require('dotenv').config();
 
 // Internal imports
-require('./auth/passport');
+require('../auth/passport');
 
 // Router imports
-const entriesRouter = require('./routes/entries');
-const usersRouter = require('./routes/users');
+const entriesRouter = require('../routes/entries');
+const usersRouter = require('../routes/users');
 
 const app = express();
 
 // MongoDB
-const mongoDB = process.env.MONGODB_KEY;
+const mongoDB = global.__MONGO_URI__;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));

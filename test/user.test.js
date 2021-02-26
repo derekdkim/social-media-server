@@ -13,6 +13,7 @@ const userData = {
   birthDate: new Date()
 }
 
+// No supertest/express. Pure MongoDB test
 describe('User Model Test', () => {
   // Connect to the MongoDB Memory Server
   beforeAll(async () => {
@@ -52,6 +53,7 @@ describe('User Model Test', () => {
     expect(err.errors.firstName).toBeDefined();
   });
 
+  // Terminate connection from MongoDB
   afterAll(done => {
     mongoose.connection.close();
     done();

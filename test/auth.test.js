@@ -2,42 +2,8 @@ import 'regenerator-runtime/runtime';
 const request = require('supertest');
 require('dotenv').config();
 
-const indexRouter = require('../routes/index');
-const app = require('../app');
-
-// describe('Server Routing Test', () => {
-//   it('GET index route', done => {
-//     request(app)
-//       .get('/')
-//       .expect(200, done);
-//   });
-
-//   it('GET sign-up route', done => {
-//     request(app)
-//       .get('/sign-up')
-//       .expect(200, done);
-//   });
-
-//   it('POST sign-up route', done => {
-//     request(app)
-//       .post('/sign-up')
-//       .send(userData)
-//       .expect(200, done);
-//   });
-
-//   it('GET log-in route', done => {
-//     request(app)
-//       .get('/log-in')
-//       .expect(200, done);
-//   });
-
-//   it('POST log-in route', done => {
-//     request(app)
-//       .post('/log-in')
-//       .send({ username: 'tester123', password: 'hunter2' })
-//       .expect(200, done);
-//   });
-// });
+const indexRouter = require('../routes/entries');
+const app = require('./testApp');
 
 describe('JWT Authentication Test', () => {
   let token;
@@ -57,7 +23,7 @@ describe('JWT Authentication Test', () => {
 
   it('Cannot access secure route without auth header', () => {
     return request(app)
-      .get('/users/')
+      .get('/entries/all')
       .then((res) => {
         expect(res.statusCode).toBe(401);
       });
@@ -72,4 +38,8 @@ describe('JWT Authentication Test', () => {
         expect(res.type).toBe('text/html');
       });
   });
+
+  afterAll(() => { 
+    mongoose.connection.close();
+  })
 });

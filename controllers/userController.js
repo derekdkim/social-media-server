@@ -1,13 +1,11 @@
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
 require('dotenv').config();
 
-exports.sign_up_GET = (req, res, next) => {
-  res.send('GET sign up');
-}
+const User = require('../models/user');
 
-exports.sign_up_POST = (req, res, next) => {
+/* New User Registration */
+exports.signUp = (req, res, next) => {
   const newUser = new User (
     {
       username: req.body.username,
@@ -30,11 +28,8 @@ exports.sign_up_POST = (req, res, next) => {
   });
 };
 
-exports.log_in_GET = (req, res, next) => {
-  res.send('GET log in');
-}
-
-exports.log_in_POST = (req, res, next) => {
+/* User Authentication and JWT generation */
+exports.logIn = (req, res, next) => {
   passport.authenticate('login', { session: false },
     (err, user, info) => {
       if (err || !user) {
@@ -54,4 +49,9 @@ exports.log_in_POST = (req, res, next) => {
       });
     }
   )(req, res);
+}
+
+/* Log out */
+exports.logOut = (req, res, next) => {
+  req.logout();
 }

@@ -1,20 +1,20 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+
+const userController = require('../controllers/userController');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('Secure route index');
 });
 
-router.get(
-  '/profile',
-  (req, res, next) => {
-    res.json({
-      message: 'You made it to the secure route',
-      user: req.user,
-      token: req.query.secret_token
-    })
-  }
-);
+/* User sign-up */
+router.post('/sign-up', userController.signUp);
+
+/* User log-in */
+router.post('/log-in', userController.logIn);
+
+router.get('/log-out', userController.logOut)
+
 
 module.exports = router;
