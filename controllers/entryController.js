@@ -1,4 +1,5 @@
 const Entry = require('../models/entry');
+const Comment = require('../models/comment');
 
 /* Create New Entry */
 exports.create_entry = (req, res, next) => {
@@ -29,6 +30,9 @@ exports.display_entries = (req, res, next) => {
       if (err) { return next(err); }
       // Success
       res.json(entry_list);
+    })
+    .catch(err => {
+      res.json(err);
     });
 }
 
@@ -46,8 +50,7 @@ exports.create_comment = async (req, res, next) => {
       const newComment = new Comment ({
         parent: entry,
         text: req.body.text,
-        author: req.user,
-        timestamp: new Date()
+        author: req.user
       });
 
       newComment.save(err => {

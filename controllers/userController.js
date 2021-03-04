@@ -23,7 +23,7 @@ exports.signUp = (req, res, next) => {
     // Success
     res.json({
       message: 'Sign-up successful',
-      user: req.user
+      user: newUser
     })    
   });
 };
@@ -54,4 +54,86 @@ exports.logIn = (req, res, next) => {
 /* Log out */
 exports.logOut = (req, res, next) => {
   req.logout();
+}
+
+/* Create Friend Request */
+exports.createFriendReq = (req, res, next) => {
+  // Find User Model of the user receiving the friend request
+  User.findById(req.params.id)
+    .exec((err, targetUser) => {
+      if (err) { return next(err); }
+
+      // Append the sender user to pendingFriends array
+      targetUser.pendingFriends.push(req.user.id);
+      targetUser.save(err => {
+        if (err) { return next(err); }
+        // Success
+        res.json({message: 'success', user: targetUser});
+      });
+    });
+}
+
+/* Accept Friend Request */
+exports.acceptFriendReq = (req, res, next) => {
+  // Find User Model of the sender user
+  User.findById(req.params.id)
+    .exec((err, targetUser) => {
+      if (err) { return next(err); }
+
+      // Remove user on pending friends array
+      let newPendingArr = [...req.user.pendingFriends];
+      req.user.pendingFriends = newPendingArr.filter(id => id !== `${targetUser._id}`);
+    
+      // Append the sender user to currentFriends array
+      req.user.currentFriends.push(targetUser.id);
+
+      // Save Changes to MongoDB
+      req.user.save(err => {
+        if (err) { return next(err); }
+        // Success
+        const resUser = req.user;
+        res.json({message: 'success', user: resUser});
+      });
+    });
+}
+
+/* Decline Friend Request */
+exports.declineFriendReq = (req, res, next) => {
+  // Find User Model of the sender user
+  User.findById(req.params.id)
+    .exec((err, targetUser) => {
+      if (err) { return next(err); }
+
+      // Remove user on pending friends array
+      let newPendingArr = [...req.user.pendingFriends];
+      req.user.pendingFriends = newPendingArr.filter(id => id !== `${targetUser._id}`);
+      
+      // Save Changes to MongoDB
+      req.user.save(err => {
+        if (err) { return next(err); }
+        // Success
+        const resUser = req.user;
+        res.json({message: 'success', user: resUser});
+      });
+    });
+}
+
+/* Display Pending Friend Requests */
+exports.displayPendingFriends = (req, res, next) => {
+  User.findById(req.user._id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      res.json(user.pendingFriends);
+    });
+}
+
+/* Display Friend List */
+exports.displayCurrentFriends = (req, res, next) => {
+  User.findById(req.user._id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      res.json(user.currentFriends);
+    });
 }

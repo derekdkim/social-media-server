@@ -42,71 +42,58 @@ const signUpReq = async (input) => {
   return user;
 };
 
+const logInReq = async (username) => {
+  let token;
+  await request(app)
+  .post('/users/log-in')
+  .send({ username: username, password: 'testest' })
+  .set('Accept', 'application/json')
+  .then((res) => {
+    token = res.body.token;
+  })
+  .catch((err, done) => {
+    console.log(err);
+    done(err);
+  });
+  return token;
+}
+
+/* Note: As the DB does not reset until the entire test suite is killed or completed, each test user should only make one lasting change to its current and pending friend list. 
+         This is to ensure each method is performed in a new, unchanged environment. Create more test users for additional tests. */
 describe('Friend Request Test', () => {
-  let userArray = [];
-  let token, user;
+  let token0, token1, token2, user0, user1, user2;
 
   beforeAll(async () => {
     // Register 3 users
-    const user0 = await signUpReq(userData[0]);
-    const user1 = await signUpReq(userData[1]);
-    const user2 = await signUpReq(userData[2]);
+    user0 = await signUpReq(userData[0]);
+    user1 = await signUpReq(userData[1]);
+    user2 = await signUpReq(userData[2]);
 
-    userArray.push(user0);
-    userArray.push(user1);
-    userArray.push(user2);
-
-    // Login with user0
-    await request(app)
-      .post('/users/log-in')
-      .send({ username: 'testerUser0', password: 'testest' })
-      .set('Accept', 'application/json')
-      .then((res) => {
-        token = res.body.token;
-        user = res.body.user;
-      })
-      .catch((err, done) => {
-        console.log(err);
-        done(err);
-      });
+    // Log-in with users and record each token
+    token0 = await logInReq(userData[0].username);
+    token1 = await logInReq(userData[1].username);
+    token2 = await logInReq(userData[2].username);
   });
 
   it('User can send friend request to another user', async () => {
     // Create friend request with user1
-    const targetUser = userArray[1];
-
     await request(app)
-      .post(`/users/${targetUser._id}/request`)
-      .set('Authorization', `Bearer ${token}`)
+      .post(`/users/${user1._id}/request`)
+      .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.user.username).toBe(targetUser.username);
-        expect(res.body.user.pendingFriends[0]).toBe(user._id);
+        expect(res.body.user.username).toBe(user1.username);
+        expect(res.body.user.pendingFriends[0]).toBe(user0._id);
       });
   });
 
   it('User can accept friend request', async () => {
-    const user0 = userArray[0];
-    const user2 = userArray[2];
-
-    // Log-in as user2
-    let user2Token;
-    await request(app)
-      .post('/users/log-in')
-      .send({ username: 'testerUser2', password: 'testest' })
-      .set('Accept', 'application/json')
-      .then((res) => {
-        user2Token = res.body.token;
-      }).catch(err => {
-        console.log(err);
-      });
-
     // Send friend request from user0 to user2
     await request(app)
       .post(`/users/${user2._id}/request`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.body.user.pendingFriends.length).toBe(1);
@@ -116,16 +103,73 @@ describe('Friend Request Test', () => {
         done(err);
       });
 
+    // Accept friend request
     await request(app)
       .post(`/users/${user0._id}/accept`)
-      .set('Authorization', `Bearer ${user2Token}`)
+      .set('Authorization', `Bearer ${token2}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.user.username).toBe(user2.username);
+        expect(res.body.user._id).toBe(user2._id);
         expect(res.body.user.currentFriends[0]).toBe(user0._id);
         expect(res.body.user.pendingFriends.length).toBe(0);
+      });
+  });
+
+  it('User can decline friend request', async () => {
+    // Send friend request from user1 to user0
+    await request(app)
+      .post(`/users/${user0._id}/request`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.user.pendingFriends.length).toBe(1);
+        expect(res.body.user.pendingFriends[0]).toBe(user1._id);
+      })
+      .catch((err, done) => {
+        console.log(err);
+        done(err);
+      });
+
+    // user0 declines friend request from user1
+    await request(app)
+      .post(`/users/${user1._id}/decline`)
+      .set('Authorization', `Bearer ${token0}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.type).toBe('application/json');
+        expect(res.body.message).toBe('success');
+        expect(res.body.user._id).toBe(user0._id);
+        expect(res.body.user.currentFriends.length).toBe(0);
+        expect(res.body.user.pendingFriends.length).toBe(0);
+      });
+  });
+
+  it('Properly displays pending friend list', async () => {
+    // Send friend request from user1 to user0
+    await request(app)
+      .post(`/users/${user0._id}/request`)
+      .set('Authorization', `Bearer ${token1}`)
+    
+    // Send friend request from user2 to user0
+    await request(app)
+      .post(`/users/${user0._id}/request`)
+      .set('Authorization', `Bearer ${token2}`)
+
+    // Get pending friend list
+    await request(app)
+      .get('/users/friends/pending')
+      .set('Authorization', `Bearer ${token0}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.type).toBe('application/json');
+        expect(res.body.length).toBe(2);
+        expect(res.body.includes(`${user1._id}`, `${user2._id}`)).toBe(true);
+      })
+      .catch((err, done) => {
+        console.log(err);
+        done(err);
       });
   });
 

@@ -4,7 +4,10 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const entryController = require('../controllers/entryController');
 
-// /entries/
+// GET index for secure route testing
+router.get('/', (req, res, next) => {
+  res.json({ message: 'Secure route access granted' });
+});
 
 /* Create Post */
 router.post('/new', entryController.create_entry);

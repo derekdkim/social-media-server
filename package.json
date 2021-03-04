@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "start": "nodemon --exec babel-node ./bin/www",
-    "test": "jest"
+    "test": "jest --verbose false",
+    "test-auth": "jest --verbose false auth.test.js",
+    "test-entries": "jest --verbose false entry.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
