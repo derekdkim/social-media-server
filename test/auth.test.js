@@ -24,7 +24,7 @@ describe('JWT Authentication Test', () => {
 
   it('Cannot access secure route without auth header', async () => {
     await request(app)
-      .get('/entries/all')
+      .get('/entries/')
       .then((res) => {
         expect(res.statusCode).toBe(401);
       });

@@ -4,8 +4,8 @@ const passport = require('passport');
 
 const userController = require('../controllers/userController');
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
+/* GET users index */
+router.get('/',  passport.authenticate('jwt', { session: false }), function(req, res, next) {
   res.send('Secure route index');
 });
 
