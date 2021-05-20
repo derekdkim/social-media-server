@@ -122,11 +122,18 @@ exports.declineFriendReq = (req, res, next) => {
 exports.removeFriend = (req, res, next) => {
   // Check if target user ID is already in friend list in case of duplicate requests
   if (req.user.currentFriends.includes(req.params.id)) {
-    User.findByIdAndUpdate(req.user._id, { $pull: { currentFriends: req.params.id } }, (err, user) => {
-      if (err) { return next(err); }
-      // Success
-      res.json({ message: 'removal success', user });
-    });
+    User.findById(req.user._id)
+      .exec( async (err, user) => {
+        if (err) { return next(err); }
+
+        await user.currentFriends.pull(req.params.id);
+        
+        user.save(err => {
+          if (err) { return next(err); }
+          // Success
+          res.json({ message: 'removal success', user });
+        });
+      });
   }
 }
 
