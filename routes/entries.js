@@ -4,6 +4,8 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const entryController = require('../controllers/entryController');
 
+// TODO: REWORK ALL ROUTES AND CONTROLLERS FOR ENTRIES. BEING LEFT LAST TO NOT MESS WITH TESTS
+
 // GET index for secure route testing
 router.get('/', (req, res, next) => {
   res.json({ message: 'Secure route access granted' });

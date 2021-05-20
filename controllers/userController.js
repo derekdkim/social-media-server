@@ -113,9 +113,21 @@ exports.declineFriendReq = (req, res, next) => {
         if (err) { return next(err); }
         // Success
         const resUser = req.user;
-        res.json({message: 'success', user: resUser});
+        res.json({ message: 'success', user: resUser });
       });
     });
+}
+
+/* Remove Existing Friend */
+exports.removeFriend = (req, res, next) => {
+  // Check if target user ID is already in friend list in case of duplicate requests
+  if (req.user.currentFriends.includes(req.params.id)) {
+    User.findByIdAndUpdate(req.user._id, { $pull: { currentFriends: req.params.id } }, (err, user) => {
+      if (err) { return next(err); }
+      // Success
+      res.json({ message: 'removal success', user });
+    });
+  }
 }
 
 /* Display Pending Friend Requests */

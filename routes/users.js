@@ -22,10 +22,13 @@ router.get('/log-out', userController.logOut)
 router.post('/:id/request', passport.authenticate('jwt', { session: false }), userController.createFriendReq);
 
 // RECIPIENT USER: Accept friend request of target user ID
-router.post('/:id/accept', passport.authenticate('jwt', { session: false }), userController.acceptFriendReq);
+router.put('/:id/accept', passport.authenticate('jwt', { session: false }), userController.acceptFriendReq);
 
 // RECIPIENT USER: Decline friend request of target user ID
-router.post('/:id/decline', passport.authenticate('jwt', { session: false }), userController.declineFriendReq);
+router.put('/:id/decline', passport.authenticate('jwt', { session: false }), userController.declineFriendReq);
+
+// Remove friend
+router.put('/:id/remove', passport.authenticate('jwt', { session: false }), userController.removeFriend);
 
 /* Display friend list */
 router.get('/friends/', passport.authenticate('jwt', { session: false }), userController.displayCurrentFriends);

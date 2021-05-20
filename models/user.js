@@ -10,6 +10,7 @@ const UserSchema = new Schema({
   birthDate: { type: Date, required: true },
   signupDate: { type: Date, default: new Date() },
   currentFriends: { type: Array, default: [] },
+  requestSendTo: { type: Array, default: [] },
   pendingFriends: { type: Array, default: [] },
   profilePicUrl: { type: String }, // TODO: Cloudinary integration
   intro: { type: String, maxLength: 160, default: 'Share something about yourself.' }
