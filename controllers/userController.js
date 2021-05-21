@@ -1,5 +1,6 @@
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const async = require('async');
 require('dotenv').config();
 
 const User = require('../models/user');
@@ -58,83 +59,116 @@ exports.logOut = (req, res, next) => {
 
 /* Create Friend Request */
 exports.createFriendReq = (req, res, next) => {
-  // Find User Model of the user receiving the friend request
-  User.findById(req.params.id)
-    .exec((err, targetUser) => {
-      if (err) { return next(err); }
+  // Find both sender and recipient user models from MongoDB
+  async.parallel({
+    sender: function(callback) {
+      User.findById(req.user.id).exec(callback);
+    },
+    recipient: function(callback) {
+      User.findById(req.params.id).exec(callback);
+    }
+  }, async (err, results) => {
+    if (err) { return next(err); }
 
-      // Append the sender user to pendingFriends array
-      targetUser.pendingFriends.push(req.user.id);
-      targetUser.save(err => {
-        if (err) { return next(err); }
-        // Success
-        res.json({message: 'success', user: targetUser});
-      });
-    });
+    // Add each user's id to their documents so intermediary stages can be displayed on the client
+    results.sender.myRequests.push(results.recipient.id);
+    results.recipient.pendingFriends.push(results.sender.id);
+
+    // Save changes to MongoDB
+    results.sender.save();
+    results.recipient.save();
+    
+    // return relevant info for testing
+    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+  });
 }
 
 /* Accept Friend Request */
 exports.acceptFriendReq = (req, res, next) => {
-  // Find User Model of the sender user
-  User.findById(req.params.id)
-    .exec((err, targetUser) => {
-      if (err) { return next(err); }
+  // Occurs after the recipient presses the Accept button
+  // Find both sender and recipient user models from MongoDB
+  async.parallel({
+    sender: function(callback) {
+      User.findById(req.params.id).exec(callback);
+    },
+    recipient: function(callback) {
+      User.findById(req.user.id).exec(callback);
+    }
+  }, async (err, results) => {
+    if (err) { return next(err); }
 
-      // Remove user on pending friends array
-      let newPendingArr = [...req.user.pendingFriends];
-      req.user.pendingFriends = newPendingArr.filter(id => id !== `${targetUser._id}`);
+    // Add each user's id to their friends list
+    results.sender.currentFriends.push(results.recipient.id);
+    results.recipient.currentFriends.push(results.sender.id);
+
+    // Remove the sender's id from recipient's pending list
+    results.recipient.pendingFriends.pull(results.sender.id);
+
+    // Remove the recipient's id from sender's requests list
+    results.sender.myRequests.pull(results.recipient.id);
+
+    // Save changes to MongoDB
+    results.sender.save();
+    results.recipient.save();
     
-      // Append the sender user to currentFriends array
-      req.user.currentFriends.push(targetUser.id);
-
-      // Save Changes to MongoDB
-      req.user.save(err => {
-        if (err) { return next(err); }
-        // Success
-        const resUser = req.user;
-        res.json({message: 'success', user: resUser});
-      });
-    });
+    // return relevant info for testing
+    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+  });
 }
 
 /* Decline Friend Request */
 exports.declineFriendReq = (req, res, next) => {
-  // Find User Model of the sender user
-  User.findById(req.params.id)
-    .exec((err, targetUser) => {
-      if (err) { return next(err); }
+  // Find both sender and recipient user models from MongoDB
+  async.parallel({
+    sender: function(callback) {
+      User.findById(req.params.id).exec(callback);
+    },
+    recipient: function(callback) {
+      User.findById(req.user.id).exec(callback);
+    }
+  }, async (err, results) => {
+    if (err) { return next(err); }
 
-      // Remove user on pending friends array
-      let newPendingArr = [...req.user.pendingFriends];
-      req.user.pendingFriends = newPendingArr.filter(id => id !== `${targetUser._id}`);
-      
-      // Save Changes to MongoDB
-      req.user.save(err => {
-        if (err) { return next(err); }
-        // Success
-        const resUser = req.user;
-        res.json({ message: 'success', user: resUser });
-      });
-    });
+    // Same as acceptFriendReq except omitting adding to currentFriends
+    // Remove the sender's id from recipient's pending list
+    results.recipient.pendingFriends.pull(results.sender.id);
+
+    // Remove the recipient's id from sender's requests list
+    results.sender.myRequests.pull(results.recipient.id);
+
+    // Save changes to MongoDB
+    results.sender.save();
+    results.recipient.save();
+    
+    // return relevant info for testing
+    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+  });
 }
 
 /* Remove Existing Friend */
 exports.removeFriend = (req, res, next) => {
-  // Check if target user ID is already in friend list in case of duplicate requests
-  if (req.user.currentFriends.includes(req.params.id)) {
-    User.findById(req.user._id)
-      .exec( async (err, user) => {
-        if (err) { return next(err); }
+  // Find both sender and recipient user models from MongoDB
+  async.parallel({
+    sender: function(callback) {
+      User.findById(req.user.id).exec(callback);
+    },
+    recipient: function(callback) {
+      User.findById(req.params.id).exec(callback);
+    }
+  }, async (err, results) => {
+    if (err) { return next(err); }
 
-        await user.currentFriends.pull(req.params.id);
-        
-        user.save(err => {
-          if (err) { return next(err); }
-          // Success
-          res.json({ message: 'removal success', user });
-        });
-      });
-  }
+    // Remove each user's id from their respective friends list
+    results.sender.currentFriends.pull(results.recipient.id);
+    results.recipient.currentFriends.pull(results.sender.id);
+
+    // Save changes to MongoDB
+    results.sender.save();
+    results.recipient.save();
+    
+    // return relevant info for testing
+    res.json({message: 'removal success', sender: results.sender, recipient: results.recipient});
+  });
 }
 
 /* Display Pending Friend Requests */

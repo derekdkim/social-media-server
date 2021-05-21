@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { Schema } = mongoose;
+const UUID = require('uuid-1345');
 
 const UserSchema = new Schema({
   username: { type: String, required: true, unique: true, minLength: 6, maxLength: 20 },
@@ -10,10 +11,11 @@ const UserSchema = new Schema({
   birthDate: { type: Date, required: true },
   signupDate: { type: Date, default: new Date() },
   currentFriends: { type: Array, default: [] },
-  requestSendTo: { type: Array, default: [] },
+  myRequests: { type: Array, default: [] },
   pendingFriends: { type: Array, default: [] },
   profilePicUrl: { type: String }, // TODO: Cloudinary integration
-  intro: { type: String, maxLength: 160, default: 'Share something about yourself.' }
+  intro: { type: String, maxLength: 160, default: 'Share something about yourself.' },
+  _id: { type: String, default: UUID.v1 }
 });
 
 // Hash password before saving to database

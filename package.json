@@ -6,9 +6,11 @@
     "start": "nodemon --exec babel-node ./bin/www",
     "test": "jest --verbose false",
     "test-auth": "jest --verbose false auth.test.js",
-    "test-entries": "jest --verbose false entry.test.js"
+    "test-entries": "jest --verbose false entry.test.js",
+    "test-friends": "jest --verbose false friend.test.js"
   },
   "dependencies": {
+    "async": "^3.2.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
@@ -16,12 +18,14 @@
     "express": "^4.16.4",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.11.17",
+    "mongodb": "^3.6.7",
+    "mongoose": "^5.12.10",
     "morgan": "~1.9.1",
     "nodemon": "^2.0.7",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "uuid-1345": "^1.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.16",

@@ -37,7 +37,7 @@ const userData = [
   }
 ];
 
-const signUpReq = async (input) => {
+const signUpReq = async (input, done) => {
   let user;
   await request(app)
     .post('/users/sign-up')
@@ -45,11 +45,14 @@ const signUpReq = async (input) => {
     .set('Accept', 'application/json')
     .then(res => {
       user = res.body.user;
+    })
+    .catch((err) => {
+      done(err);
     });
   return user;
 };
 
-const logInReq = async (username) => {
+const logInReq = async (username, done) => {
   let token;
   await request(app)
   .post('/users/log-in')
@@ -58,8 +61,7 @@ const logInReq = async (username) => {
   .then((res) => {
     token = res.body.token;
   })
-  .catch((err, done) => {
-    console.log(err);
+  .catch((err) => {
     done(err);
   });
   return token;
@@ -91,123 +93,141 @@ describe('Friend Request Test', () => {
     token3 = await logInReq(userData[3].username);
   });
 
-  it('User can send friend request to another user', async () => {
+  it('User can send friend request to another user', async (done) => {
+    let senderId = user0._id;
+    let recipId = user1._id;
+
     // Create friend request with user1
     await request(app)
-      .post(`/users/${user1._id}/request`)
+      .post(`/users/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.user.username).toBe(user1.username);
-        expect(res.body.user.pendingFriends[0]).toBe(user0._id);
+        expect(res.body.sender._id).toBe(senderId);
+        expect(res.body.sender.myRequests).toContain(recipId);
+        expect(res.body.recipient._id).toBe(recipId);
+        expect(res.body.recipient.pendingFriends).toContain(senderId);
+      })
+      .then(() => { 
+        done();
+      })
+      .catch((err) => {
+        done(err);
       });
   });
 
-  it('User can accept friend request', async () => {
+  it('User can accept friend request', async (done) => {
+    let senderId = user0._id;
+    let recipId = user2._id;
+
     // Send friend request from user0 to user2
     await request(app)
-      .post(`/users/${user2._id}/request`)
+      .post(`/users/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.user.pendingFriends.length).toBe(1);
-        expect(res.body.user.pendingFriends[0]).toBe(user0._id);
-      })
-      .catch((err, done) => {
-        done(err);
-      });
+      }) // NOTE: Adding .then(() => { done() }).catch(err => { done(err) }) before the final request in multi-request test cases appear to break the suite.
 
     // Accept friend request
     await request(app)
-      .put(`/users/${user0._id}/accept`)
+      .put(`/users/${senderId}/accept`)
       .set('Authorization', `Bearer ${token2}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.user._id).toBe(user2._id);
-        expect(res.body.user.currentFriends.length).toBe(1);
-        expect(res.body.user.currentFriends[0]).toBe(user0._id);
-        expect(res.body.user.pendingFriends.length).toBe(0);
+        expect(res.body.recipient._id).toBe(recipId);
+        expect(res.body.recipient.currentFriends).toContain(senderId);
+        expect(res.body.sender.currentFriends).toContain(recipId);
+        expect(res.body.recipient.pendingFriends).not.toContain(senderId);
+        expect(res.body.sender.myRequests).not.toContain(recipId);
+      })
+      .then(() => { 
+        done();
+      })
+      .catch((err) => {
+        done(err);
       });
   });
 
-  it('User can decline friend request', async () => {
+  it('User can decline friend request', async (done) => {
+    let senderId = user1._id;
+    let recipId = user0._id;
+
     // Send friend request from user1 to user0
     await request(app)
-      .post(`/users/${user0._id}/request`)
+      .post(`/users/${recipId}/request`)
       .set('Authorization', `Bearer ${token1}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.user.pendingFriends.length).toBe(1);
-        expect(res.body.user.pendingFriends[0]).toBe(user1._id);
       })
-      .catch((err, done) => {
-        console.log(err);
-        done(err);
-      });
 
     // user0 declines friend request from user1
     await request(app)
-      .put(`/users/${user1._id}/decline`)
+      .put(`/users/${senderId}/decline`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.user._id).toBe(user0._id);
-        expect(res.body.user.currentFriends.length).toBe(0);
-        expect(res.body.user.pendingFriends.length).toBe(0);
+        expect(res.body.recipient._id).toBe(recipId);
+        expect(res.body.recipient.currentFriends).not.toContain(senderId);
+        expect(res.body.recipient.pendingFriends).not.toContain(senderId);
+        expect(res.body.sender.myRequests).not.toContain(recipId);
+      })
+      .then(() => { 
+        done();
+      })
+      .catch((err) => {
+        done(err);
       });
   });
 
-  it('User can remove friend after accepting', async () => {
+  it('User can remove friend after accepting', async (done) => {
+    let senderId = user0._id;
+    let recipId = user3._id;
+
     // Send friend request from user0 to user3
     await request(app)
-      .post(`/users/${user3._id}/request`)
+      .post(`/users/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.user.pendingFriends.length).toBe(1);
-        expect(res.body.user.pendingFriends[0]).toBe(user0._id);
       })
-      .catch((err, done) => {
-        done(err);
-      });
 
     // Accept friend request
     await request(app)
-      .put(`/users/${user0._id}/accept`)
+      .put(`/users/${senderId}/accept`)
       .set('Authorization', `Bearer ${token3}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.type).toBe('application/json');
-        expect(res.body.message).toBe('success');
-        expect(res.body.user._id).toBe(user3._id);
-        expect(res.body.user.currentFriends.length).toBe(1);
-        expect(res.body.user.currentFriends[0]).toBe(user0._id);
-        expect(res.body.user.pendingFriends.length).toBe(0);
-      });
+        expect(res.body.recipient.currentFriends).toContain(senderId);
+        expect(res.body.sender.currentFriends).toContain(recipId);
+      })
     
-    // Remove friend
+    // sender removes friend (recipient)
     await request(app)
-      .put(`/users/${user0._id}/remove`)
-      .set('Authorization', `Bearer ${token3}`)
+      .put(`/users/${recipId}/remove`)
+      .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
-        console.log(user0._id === res.body.user.currentFriends[0]);
-        console.log(`${user0._id} ${res.body.user.currentFriends}`);
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('removal success');
-        expect(res.body.user._id).toBe(user3._id);
-        expect(res.body.user.currentFriends.length).toBe(0);
-        expect(res.body.user.pendingFriends.length).toBe(0);
+        expect(res.body.recipient._id).toBe(recipId);
+        expect(res.body.recipient.currentFriends).not.toContain(senderId);
+        expect(res.body.sender.currentFriends).not.toContain(recipId);
+      })
+      .then(() => { 
+        done();
+      })
+      .catch((err) => {
+        done(err);
       });
   });
 
-  it('Properly displays pending friend list', async () => {
+  it('Properly displays pending friend list', async (done) => {
     // Send friend request from user1 to user0
     await request(app)
       .post(`/users/${user0._id}/request`)
@@ -225,11 +245,12 @@ describe('Friend Request Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
-        expect(res.body.length).toBe(2);
         expect(res.body.includes(`${user1._id}`, `${user2._id}`)).toBe(true);
       })
-      .catch((err, done) => {
-        console.log(err);
+      .then(() => { 
+        done();
+      })
+      .catch((err) => {
         done(err);
       });
   });
