@@ -22,6 +22,31 @@ describe('JWT Authentication Test', () => {
       })
   });
 
+  it('User can successfully log in', async () => {
+    await request(app)
+      .post('/users/log-in')
+      .send({
+        username: process.env.AUTH_TEST_USERNAME,
+        password: process.env.AUTH_TEST_PASSWORD,
+      })
+      .set('Accept', 'application/json')
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.type).toBe('application/json');
+        expect(res.body.user.username).toBe(process.env.AUTH_TEST_USERNAME);
+      });
+  });
+
+  it('User redirects to index page on log-out', async (done) => {
+    await request(app)
+      .get('/users/log-out')
+      .expect(302) // Supertest built-in assertion
+      .expect('Location', '/') // Supertest built-in assertion
+      .then(() => {
+        done();
+      });
+  });
+
   it('Cannot access secure route without auth header', async () => {
     await request(app)
       .get('/entries/')
@@ -63,7 +88,7 @@ describe('JWT Authentication Test', () => {
       });
   });
   
-  afterAll(async (done) => { 
+  afterAll(async (done) => {
     await mongoose.connection.close();
     done();
   });

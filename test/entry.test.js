@@ -107,7 +107,7 @@ describe('Create Entry Test', () => {
       });
   });
 
-  afterAll(async (done) => { 
+  afterAll(async (done) => {
     await mongoose.connection.close();
     done();
   });

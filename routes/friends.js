@@ -1,34 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
+
+const friendController = require('../controllers/friendController');
 
 // GET: Display friend list
-router.get('/all', (req, res, next) => {
-  res.send('GET friend list');
-});
+router.get('/all', friendController.displayCurrentFriends);
 
 // GET: Display all pending friends
-router.get('/pending', (req, res, next) => {
-  res.send('GET pending friends');
-});
+router.get('/pending', friendController.displayPendingFriends);
 
-// UPDATE: Send friend request to target id
-router.post('/:id/request', (req, res, next) => {
-  res.send('POST friend request');
-});
+/* Friend Request*/
+// REQUESTER USER: Make a friend request to target user ID
+// NOTE: Omitting passport.authenticate() for request results in 404 error for unknown reasons 
+router.post('/:id/request', passport.authenticate('jwt', { session: false }), friendController.createFriendReq);
 
-// UPDATE: Accept friend request
-router.post('/:id/accept', (req, res, next) => {
-  res.send('ACCEPT friend request');
-});
+// RECIPIENT USER: Accept friend request of target user ID
+router.put('/:id/accept', friendController.acceptFriendReq);
 
-// UPDATE: Accept friend request
-router.put('/:id/decline', (req, res, next) => {
-  res.send('DECLINE friend request');
-});
+// RECIPIENT USER: Decline friend request of target user ID
+router.put('/:id/decline', friendController.declineFriendReq);
 
 // UPDATE: Remove friend from the friend list
-router.put('/:id/remove', (req, res, next) => {
-  res.send('REMOVE friend');
-});
+router.put('/:id/remove', friendController.removeFriend);
 
 module.exports = router;

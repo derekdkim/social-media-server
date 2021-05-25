@@ -13,6 +13,7 @@ require('./auth/passport');
 // Router imports
 const entriesRouter = require('./routes/entries');
 const usersRouter = require('./routes/users');
+const friendsRouter = require('./routes/friends');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/entries', passport.authenticate('jwt', { session: false }), entriesRouter);
+app.use('/friends', passport.authenticate('jwt', { session: false }), friendsRouter);
 app.use('/users', usersRouter);
 
 module.exports = app;

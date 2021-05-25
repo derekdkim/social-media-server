@@ -99,7 +99,7 @@ describe('Friend Request Test', () => {
 
     // Create friend request with user1
     await request(app)
-      .post(`/users/${recipId}/request`)
+      .post(`/friends/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -124,7 +124,7 @@ describe('Friend Request Test', () => {
 
     // Send friend request from user0 to user2
     await request(app)
-      .post(`/users/${recipId}/request`)
+      .post(`/friends/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -132,7 +132,7 @@ describe('Friend Request Test', () => {
 
     // Accept friend request
     await request(app)
-      .put(`/users/${senderId}/accept`)
+      .put(`/friends/${senderId}/accept`)
       .set('Authorization', `Bearer ${token2}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -158,7 +158,7 @@ describe('Friend Request Test', () => {
 
     // Send friend request from user1 to user0
     await request(app)
-      .post(`/users/${recipId}/request`)
+      .post(`/friends/${recipId}/request`)
       .set('Authorization', `Bearer ${token1}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -166,7 +166,7 @@ describe('Friend Request Test', () => {
 
     // user0 declines friend request from user1
     await request(app)
-      .put(`/users/${senderId}/decline`)
+      .put(`/friends/${senderId}/decline`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -191,7 +191,7 @@ describe('Friend Request Test', () => {
 
     // Send friend request from user0 to user3
     await request(app)
-      .post(`/users/${recipId}/request`)
+      .post(`/friends/${recipId}/request`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -199,7 +199,7 @@ describe('Friend Request Test', () => {
 
     // Accept friend request
     await request(app)
-      .put(`/users/${senderId}/accept`)
+      .put(`/friends/${senderId}/accept`)
       .set('Authorization', `Bearer ${token3}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -209,7 +209,7 @@ describe('Friend Request Test', () => {
     
     // sender removes friend (recipient)
     await request(app)
-      .put(`/users/${recipId}/remove`)
+      .put(`/friends/${recipId}/remove`)
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -230,17 +230,17 @@ describe('Friend Request Test', () => {
   it('Properly displays pending friend list', async (done) => {
     // Send friend request from user1 to user0
     await request(app)
-      .post(`/users/${user0._id}/request`)
+      .post(`/friends/${user0._id}/request`)
       .set('Authorization', `Bearer ${token1}`)
     
     // Send friend request from user2 to user0
     await request(app)
-      .post(`/users/${user0._id}/request`)
+      .post(`/friends/${user0._id}/request`)
       .set('Authorization', `Bearer ${token2}`)
 
     // Get pending friend list
     await request(app)
-      .get('/users/friends/pending')
+      .get('/friends/pending')
       .set('Authorization', `Bearer ${token0}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
