@@ -1,41 +1,32 @@
 const express = require('express');
 const router = express.Router();
 
+const journeyController = require('../controllers/journeyController');
+
+// UNTESTED
 // GET: Display all journeys
-router.get('/all', (req,res, next) => {
-  // Placeholder
-  res.send('GET all');
-});
+router.get('/all', journeyController.displayAllJourneys);
 
+// UNTESTED
 // GET: Display friends' journeys
-router.get('/friends', (req,res, next) => {
-  // Placeholder
-  res.send('GET friends journeys');
-});
+router.get('/friends', journeyController.displayFriendsJourneys);
 
+// UNTESTED
 // GET: Display my journeys
-router.get('/private', (req,res, next) => {
-  // Placeholder
-  res.send('GET my journeys');
-});
+router.get('/private', journeyController.displayMyJourneys);
+
+// UNTESTED
+// POST: Create new journey
+router.post('/new', journeyController.createJourney);
 
 // GET: Display journey details
-router.get('/:id', (req,res, next) => {
-  // Placeholder
-  res.send('GET specific journey');
-});
+router.get('/:id', journeyController.displayJourneyPage);
 
 // UPDATE: Update specified journey
-router.put('/:id', (req,res, next) => {
-  // Placeholder
-  res.send('UPDATE journey');
-});
+router.put('/:id', journeyController.editJourney);
 
 // DELETE: Delete specified journey
-router.delete('/:id', (req,res, next) => {
-  // Placeholder
-  res.send('DELETE journey');
-});
+router.delete('/:id', journeyController.deleteJourney);
 
 // POST: Join specified journey as participant
 router.post('/:id/join', (req,res, next) => {

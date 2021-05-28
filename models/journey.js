@@ -14,4 +14,11 @@ const JourneySchema = new Schema ({
   privacy: { type: Number, min: 0, max: 2, default: 0 } // 0 - Public, 1 - Friends-only, 2 - Private
 });
 
+// Virtual for journey URL, used for redirects
+JourneySchema
+  .virtual('url')
+  .get(function() {
+    return '/journeys/' + this._id;
+  });
+
 module.exports = mongoose.model('Journey', JourneySchema);
