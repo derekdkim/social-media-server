@@ -1,6 +1,6 @@
 const Journey = require('../models/journey');
 const async = require('async');
-const user = require('../models/user');
+const User = require('../models/user');
 
 // Display all journeys viewable for user
 exports.displayAllJourneys = (req, res, next) => {
@@ -65,23 +65,20 @@ exports.displayMyJourneys = (req, res, next) => {
 }
 
 // Display journey page details
-exports.displayJourneyPage = (req, res, next) => {
+exports.displayJourneyPage = async (req, res, next) => {
   // Fetch journey with specified url as id
-  Journey.findById(req.params.id)
-    .populate('entries')
+  await Journey.findById(req.params.id)
+    .populate('author')
     .exec((err, journey) => {
       if (err) { return next(err); }
       
-      res.json(journey);
-    })
-    .catch(err => {
-      res.json(err);
+      res.json({ message: 'success', journey });
     });
 }
 
 // Create new journey
 exports.createJourney = (req, res, next) => {
-  user.findById(req.user.id)
+  User.findById(req.user._id)
     .exec((err, user) => {
       // Initialize new Journey object
       const newJourney = new Journey(
@@ -99,12 +96,17 @@ exports.createJourney = (req, res, next) => {
       }
 
       // Add due date if there is one
-      if (req.body.dueDate && req.body.dueDate instanceof Date) {
-        newJourney.dueDate = req.body.dueDate;
+      if (req.body.dueDate) {
+        // JSON does not have Date datatype
+        const workingDueDate = new Date(req.body.dueDate);
+        // Validate if input is a proper date
+        if (!isNaN(workingDueDate.getTime())) {
+          newJourney.dueDate = req.body.dueDate;
+        }
       }
 
       // Add tags if there are any
-      if (req.body.tags && req.body.tags.length >== 1) {
+      if (req.body.tags && req.body.tags.length > 0) {
         newJourney.tags = [...req.body.tags];
       }
 
@@ -112,50 +114,68 @@ exports.createJourney = (req, res, next) => {
       newJourney.save((err) => {
         if (err) { return next(err); }
 
-        res.redirect(newJourney.url);
+        res.json({ message: 'success', journey: newJourney });
+        // res.redirect(newJourney.url);
       });
     });
 }
 
 // Update journey
 exports.editJourney = (req, res, next) => {
-  // Initialize new Journey object
-  const changedJourney = new Journey(
-    {
-      title: req.body.title,
-      author: req.body.author,
-      desc: req.body.desc,
-      timestamp: req.body.timestamp,
-      privacy: req.body.privacy,
-      likedBy: req.body.likedBy,
-      participants: req.body.participants,
-      entries: req.body.entries,
-      tags: req.body.tags,
-      _id:req.params.id
-    }
-  );
+  const changedJourney = {
+    title: req.body.title,
+    privacy: req.body.privacy,
+    _id: req.params.id
+  };
 
-  // Add due date if there is one
-  if (req.body.dueDate && req.body.dueDate instanceof Date) {
-    changedJourney.dueDate = req.body.dueDate;
+  // Add description if there is one
+  if (req.body.desc && typeof req.body.desc === 'string') {
+    changedJourney.desc = req.body.desc;
   }
 
-  Journey.findByIdAndUpdate(req.params.id, changedJourney, function(err, resultJourney) {
+  // Add due date if there is one
+  if (req.body.dueDate) {
+    // JSON does not have Date datatype
+    const workingDueDate = new Date(req.body.dueDate);
+    // Validate if input is a proper date
+    if (!isNaN(workingDueDate.getTime())) {
+      changedJourney.dueDate = req.body.dueDate;
+    }
+  }
+
+  // Add tags if there are any
+  if (req.body.tags && req.body.tags.length > 0) {
+    changedJourney.tags = [...req.body.tags];
+  }
+
+  Journey.findByIdAndUpdate(req.params.id, changedJourney, { new: true }, function(err, result) {
     if (err) { return next(err); }
-    // Success - redirect to changed journey page
-    res.redirect(resultJourney.url);
+
+    // success
+    res.json({ message: 'edit success', journey: result });
   });
-}
+};
 
 // Remove journey
 // TODO: Need to remove all entries and comments referencing this journey when it gets deleted
 exports.deleteJourney = (req, res, next) => {
-  Journey.findByIdAndDelete(req.params.id, function(err) => {
-    if (err) { return next(err); }
+  async.parallel({
+    user: function (callback) {
+      User.findById(req.user._id).exec(callback);
+    },
+    journey: function (callback) {
+      Journey.findById(req.params.id)
+        .populate('author')
+        .exec(callback);
+    } 
+  }, function (err, results) {
+    if (results.user._id === results.journey.author._id) {
+      Journey.findByIdAndDelete(req.params.id, function (err) {
+        if (err) { return next(err); }
 
-    // Redirecting to index as placeholder
-    // TODO: Figure out a solution for the best place to redirect to after deleting.
-    res.redirect('/');
+        res.json({ message: 'delete success' });
+      });
+    }
   });
 }
 

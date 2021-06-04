@@ -8,28 +8,28 @@ const User = require('../models/user');
 
 const userData = [
   { 
-    username: 'testerUser0', 
+    username: 'testerFriend0', 
     password: 'testest',
     firstName: 'Tester0',
     lastName: 'McTesterface',
     birthDate: new Date()
   },
   { 
-    username: 'testerUser1', 
+    username: 'testerFriend1', 
     password: 'testest',
     firstName: 'Tester1',
     lastName: 'McTesterface',
     birthDate: new Date()
   },
   { 
-    username: 'testerUser2', 
+    username: 'testerFriend2', 
     password: 'testest',
     firstName: 'Tester2',
     lastName: 'McTesterface',
     birthDate: new Date()
   },
   { 
-    username: 'testerUser3', 
+    username: 'testerFriend3', 
     password: 'testest',
     firstName: 'Tester3',
     lastName: 'McTesterface',

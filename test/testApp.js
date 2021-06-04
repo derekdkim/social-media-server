@@ -14,7 +14,7 @@ require('../auth/passport');
 const entriesRouter = require('../routes/entries');
 const usersRouter = require('../routes/users');
 const friendsRouter = require('../routes/friends');
-const journeysRouter = require('./routes/journeys');
+const journeysRouter = require('../routes/journeys');
 
 const app = express();
 
@@ -27,7 +27,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 // App-level Middleware
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
