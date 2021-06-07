@@ -8,7 +8,6 @@ const JourneySchema = new Schema ({
   timestamp: { type: Date, default: new Date() },
   dueDate: { type: Date }, // Optional due date
   participants: { type: Array, default: [] },
-  entries: { type: Array, default: [] },
   likedBy: { type: Array, default: [] },
   tags: { type: Array, default: [] },
   privacy: { type: Number, min: 0, max: 2, default: 0 } // 0 - Public, 1 - Friends-only, 2 - Private

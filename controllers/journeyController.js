@@ -9,14 +9,12 @@ exports.displayAllJourneys = (req, res, next) => {
       // Fetch all public journeys in the collection
       Journey.find({ privacy: 0 })
         .sort(['timestamp', 'descending'])
-        .populate('entries')
         .exec(callback);
     },
     friendsOnly: function(callback) {
       // Fetch friends-only journeys
       Journey.find({ author: { $in: [req.user._id, ...req.user.currentFriends] }, privacy: 1 })
         .sort(['timestamp', 'descending'])
-        .populate('entries')
         .exec(callback);
     }
   }, (err, results) => {
@@ -37,7 +35,6 @@ exports.displayFriendsJourneys = (req, res, next) => {
   // Fetch journeys with authors that are in friends' list except private journeys
   Journey.find({ author: { $in: [req.user._id, ...friendList] }, privacy: { $ne: 2 } })
     .sort(['timestamp', 'descending'])
-    .populate('entries')
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
@@ -53,7 +50,6 @@ exports.displayMyJourneys = (req, res, next) => {
   // Fetch journey with author matching req.user.id
   Journey.find({ author: req.user.id })
     .sort(['timestamp', 'descending'])
-    .populate('entries')
     .exec((err, journeys) => {
       if (err) { return next(err); }
 

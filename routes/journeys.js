@@ -16,7 +16,6 @@ router.get('/friends', passport.authenticate('jwt', { session: false }), journey
 // GET: Display my journeys
 router.get('/private', passport.authenticate('jwt', { session: false }), journeyController.displayMyJourneys);
 
-// UNTESTED
 // POST: Create new journey
 router.post('/new', passport.authenticate('jwt', { session: false }), journeyController.createJourney);
 

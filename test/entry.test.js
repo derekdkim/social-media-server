@@ -8,104 +8,215 @@ const User = require('../models/user');
 const Entry = require('../models/entry');
 const Comment = require('../models/comment');
 
-describe('Create Entry Test', () => {
-  let token, user;
-  beforeAll(async () => {
-    // Sign-up test user
-    await request(app)
-      .post('/users/sign-up')
-      .send({
-        username: process.env.AUTH_TEST_USERNAME,
-        password: process.env.AUTH_TEST_PASSWORD,
-        firstName: 'Tester',
-        lastName: 'Tester',
-        birthDate: new Date()
-      })
-      .set('Accept', 'application/json')
+const userData = { 
+  username: 'entryTestUser', 
+  password: 'testest',
+  firstName: 'Tester0',
+  lastName: 'McTesterface',
+  birthDate: new Date()
+};
 
-    // Log-in test user
+const testInput = [
+  {
+    text: 'Just testing an entry'
+  }
+];
+
+const signUpReq = async (input, done) => {
+  let user;
+  await request(app)
+    .post('/users/sign-up')
+    .send(input)
+    .set('Accept', 'application/json')
+    .then(res => {
+      user = res.body.user;
+    })
+    .catch((err) => {
+      done(err);
+    });
+  return user;
+};
+
+const logInReq = async (username, done) => {
+  let token;
+  await request(app)
+  .post('/users/log-in')
+  .send({ username: username, password: 'testest' })
+  .set('Accept', 'application/json')
+  .then((res) => {
+    token = res.body.token;
+  })
+  .catch((err) => {
+    done(err);
+  });
+  return token;
+}
+
+describe('Create Entry Test', () => {
+  let token, user, parentJourney;
+  beforeAll(async (done) => {
+    // Authenticate user
+    user = await signUpReq(userData);
+    token = await logInReq(userData.username);
+
+    // Create parent journey
     await request(app)
-      .post('/users/log-in')
+      .post('/journeys/new')
       .send({
-        username: process.env.AUTH_TEST_USERNAME,
-        password: process.env.AUTH_TEST_PASSWORD
+        title: 'Min Test Journey',
+        privacy: 0
       })
-      .set('Accept', 'applicaton/json')
+      .set('Authorization', `Bearer ${token}`)
       .then((res) => {
-        token = res.body.token;
-        user = res.body.user;
-      })
-      .catch((err, done) => {
-        console.log(err);
-        done(err);
+        parentJourney = res.body.journey;
+        done();
       });
   });
 
-  it('Cannot create post if not logged in', async () => {
+  it('Cannot create post if not logged in', async (done) => {
     // Attempt to create entry. Should not work as user is unauthenticated
     await request(app)
-      .post('/entries/new')
+      .post(`/entries/${parentJourney._id}/new`)
       .send({
         text: 'testing'
       })
       .set('Accept', 'applicaton/json')
       .then((res) => {
         expect(res.statusCode).toBe(401);
-      });
-  });
-
-  it('Create post test with JWT authorization', async () => {
-
-    // Create entry
-    await request(app)
-      .post('/entries/new')
-      .send({
-        text: 'testing'
       })
-      .set('Authorization', `Bearer ${token}`)
-      .then((res) => {
-        expect(res.statusCode).toBe(200);
-        expect(res.type).toBe('application/json');
-        expect(res.body.text).toBe('testing');
-        expect(res.body.author).toStrictEqual(user);
-      });
-  });
-
-  it('Successfully creates a comment in an existing entryId', async () => {
-    let entryId;
-    // Create entry
-    await request(app)
-      .post('/entries/new')
-      .send({
-        text: 'Parent entryId'
+      .then(() => {
+        done();
       })
-      .set('Authorization', `Bearer ${token}`)
-      .then((res) => {
-        entryId = res.body._id;
-      })
-      .catch((err, done) => {
-        console.log(err);
-        done(err);
-      });
-
-    // Create comment in parent entry
-    await request(app)
-      .post(`/entries/${entryId}/comments/new`)
-      .send({
-        text: 'testing'
-      })
-      .set('Authorization', `Bearer ${token}`)
-      .then((res) => {
-        expect(res.statusCode).toBe(200);
-        expect(res.type).toBe('application/json');
-        expect(res.body.text).toBe('testing');
-        expect(res.body.author).toStrictEqual(user);
-      })
-      .catch((err, done) => {
-        console.log(err);
+      .catch((err) => {
         done(err);
       });
   });
+
+  it('User can create post with JWT', async (done) => {
+
+    // Create entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.type).toBe('application/json');
+        expect(res.body.entry.text).toBe('Just testing an entry');
+        expect(res.body.entry.author._id).toStrictEqual(user._id);
+        expect(res.body.entry.parent._id).toStrictEqual(parentJourney._id);
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  it('User can edit their entry', async (done) => {
+    let entryID;
+
+    // Create entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryID = res.body.entry._id;
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Edit entry
+    await request(app)
+      .put(`/entries/${parentJourney._id}/${entryID}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ text: 'Changed an entry' })
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.entry.text).toStrictEqual('Changed an entry');
+        expect(res.body.entry.author).toStrictEqual(user._id);
+        expect(res.body.entry._id).toBe(entryID);
+        expect(res.body.entry.parent).toStrictEqual(parentJourney._id);
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  it('User can delete their entry', async(done) => {
+    let entryID;
+
+    // Create entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryID = res.body.entry._id;
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Delete entry
+    await request(app)
+      .delete(`/entries/${parentJourney._id}/${entryID}`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  // it('Successfully creates a comment in an existing entryId', async () => {
+  //   let entryId;
+  //   // Create entry
+  //   await request(app)
+  //     .post('/entries/new')
+  //     .send({
+  //       text: 'Parent entryId'
+  //     })
+  //     .set('Authorization', `Bearer ${token}`)
+  //     .then((res) => {
+  //       entryId = res.body._id;
+  //     })
+  //     .catch((err, done) => {
+  //       console.log(err);
+  //       done(err);
+  //     });
+
+  //   // Create comment in parent entry
+  //   await request(app)
+  //     .post(`/entries/${entryId}/comments/new`)
+  //     .send({
+  //       text: 'testing'
+  //     })
+  //     .set('Authorization', `Bearer ${token}`)
+  //     .then((res) => {
+  //       expect(res.statusCode).toBe(200);
+  //       expect(res.type).toBe('application/json');
+  //       expect(res.body.text).toBe('testing');
+  //       expect(res.body.author).toStrictEqual(user);
+  //     })
+  //     .catch((err, done) => {
+  //       console.log(err);
+  //       done(err);
+  //     });
+  // });
 
   afterAll(async (done) => {
     await mongoose.connection.close();
