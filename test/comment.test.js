@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
+import { ExpectationFailed } from 'http-errors';
 import 'regenerator-runtime/runtime';
 const request = require('supertest');
-require('dotenv').config();
 
 const app = require('./testApp');
 const User = require('../models/user');
 const Entry = require('../models/entry');
+const Comment = require('../models/comment');
 
 const userData = { 
-  username: 'entryTestUser', 
+  username: 'commentTestUser', 
   password: 'testest',
   firstName: 'Tester0',
   lastName: 'McTesterface',
@@ -17,7 +18,10 @@ const userData = {
 
 const testInput = [
   {
-    text: 'Just testing an entry'
+    text: 'Just testing comments'
+  },
+  {
+    text: 'Just editing comments'
   }
 ];
 
@@ -51,37 +55,54 @@ const logInReq = async (username, done) => {
   return token;
 }
 
-describe('Entry Test', () => {
-  let token, user, parentJourney;
-  beforeAll(async (done) => {
-    // Authenticate user
+describe('Comment Test', () => {
+  let user, token, parentJourney, parentEntry;
+  beforeAll( async (done) => {
     user = await signUpReq(userData);
     token = await logInReq(userData.username);
 
-    // Create parent journey
+    // Create journey
     await request(app)
       .post('/journeys/new')
+      .set('Authorization', `Bearer ${token}`)
       .send({
-        title: 'Min Test Journey',
+        title: 'Parent Journey',
         privacy: 0
       })
-      .set('Authorization', `Bearer ${token}`)
       .then((res) => {
         parentJourney = res.body.journey;
-        done();
+      })
+      .catch((err) => {
+        done(err);
       });
-  });
 
-  it('Cannot create post if not logged in', async (done) => {
-    // Attempt to create entry. Should not work as user is unauthenticated
+    // Create parent entry
     await request(app)
       .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
-        text: 'testing'
+        text: 'Parent Entry'
       })
-      .set('Accept', 'applicaton/json')
       .then((res) => {
-        expect(res.statusCode).toBe(401);
+        parentEntry = res.body.entry;
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  it('Users can create comment using parent entry ID', async (done) => {
+    // Create comment
+    await request(app)
+      .post(`/comments/${parentEntry._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.comment.author._id).toBe(user._id);
+        expect(res.body.comment.text).toBe(testInput[0].text);
+        expect(res.body.comment.parent._id).toBe(parentEntry._id);
       })
       .then(() => {
         done();
@@ -91,55 +112,31 @@ describe('Entry Test', () => {
       });
   });
 
-  it('User can create post with JWT', async (done) => {
-
-    // Create entry
+  it('Users can edit their comments', async (done) => {
+    let commentID;
+    // Create comment
     await request(app)
-      .post(`/entries/${parentJourney._id}/new`)
+      .post(`/comments/${parentEntry._id}/new`)
       .set('Authorization', `Bearer ${token}`)
       .send(testInput[0])
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.type).toBe('application/json');
-        expect(res.body.entry.text).toBe('Just testing an entry');
-        expect(res.body.entry.author._id).toStrictEqual(user._id);
-        expect(res.body.entry.parent._id).toStrictEqual(parentJourney._id);
-      })
-      .then(() => {
-        done();
-      })
-      .catch((err) => {
-        done(err);
-      });
-  });
-
-  it('User can edit their entry', async (done) => {
-    let entryID;
-
-    // Create entry
-    await request(app)
-      .post(`/entries/${parentJourney._id}/new`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(testInput[0])
-      .then((res) => {
-        expect(res.statusCode).toBe(200);
-        entryID = res.body.entry._id;
+        commentID = res.body.comment._id;
       })
       .catch((err) => {
         done(err);
       });
     
-    // Edit entry
+    // Edit comment
     await request(app)
-      .put(`/entries/${parentJourney._id}/${entryID}`)
+      .put(`/comments/${commentID}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ text: 'Changed an entry' })
+      .send(testInput[1])
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.entry.text).toStrictEqual('Changed an entry');
-        expect(res.body.entry.author).toStrictEqual(user._id);
-        expect(res.body.entry._id).toBe(entryID);
-        expect(res.body.entry.parent).toStrictEqual(parentJourney._id);
+        expect(res.body.comment._id).toBe(commentID);
+        expect(res.body.comment.author).toBe(user._id);
+        expect(res.body.comment.text).toBe(testInput[1].text);
       })
       .then(() => {
         done();
@@ -149,25 +146,24 @@ describe('Entry Test', () => {
       });
   });
 
-  it('User can delete their entry', async(done) => {
-    let entryID;
-
-    // Create entry
+  it('Users can delete their comments', async (done) => {
+    let commentID;
+    // Create comment
     await request(app)
-      .post(`/entries/${parentJourney._id}/new`)
+      .post(`/comments/${parentEntry._id}/new`)
       .set('Authorization', `Bearer ${token}`)
       .send(testInput[0])
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        entryID = res.body.entry._id;
+        commentID = res.body.comment._id;
       })
       .catch((err) => {
         done(err);
       });
     
-    // Delete entry
+    // Delete comment
     await request(app)
-      .delete(`/entries/${parentJourney._id}/${entryID}`)
+      .delete(`/comments/${commentID}`)
       .set('Authorization', `Bearer ${token}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
@@ -181,7 +177,7 @@ describe('Entry Test', () => {
       });
   });
 
-  afterAll(async (done) => {
+  afterAll( async (done) => {
     await mongoose.connection.close();
     done();
   });

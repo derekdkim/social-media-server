@@ -1,21 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 
-router.get('new', (req, res, next) => {
-  res.send('POST new comment');
-});
+const commentController = require('../controllers/commentController');
 
-router.put('/:id', (req, res, next) => {
-  res.send('UPDATE comment');
-});
+// POST: Create new comment
+router.post('/:entryID/new', passport.authenticate('jwt', { session: false }), commentController.createComment);
 
-router.delete('/:id', (req, res, next) => {
-  res.send('DELETE comment');
-});
+// UPDATE: Edit comment
+router.put('/:commentID', passport.authenticate('jwt', { session: false }), commentController.editComment);
 
-router.put('/:id', (req, res, next) => {
-  res.send('Like comment');
-});
+// DELETE: Delete comment
+router.delete('/:commentID', passport.authenticate('jwt', { session: false }), commentController.deleteComment);
+
+// GET: Display all comments
+router.get('/:entryID/all', commentController.displayComments);
 
 
 module.exports = router;

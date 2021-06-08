@@ -1,7 +1,6 @@
 const Entry = require('../models/entry');
 const Journey = require('../models/journey');
 const Comment = require('../models/comment');
-const user = require('../models/user');
 
 // Create New Entry
 exports.createEntry = (req, res, next) => {
@@ -73,42 +72,17 @@ exports.deleteEntry = (req, res, next) => {
 }
 
 // Display All Entries
-exports.display_entries = (req, res, next) => {
-  Entry.find()
+exports.displayEntries = (req, res, next) => {
+  Entry.find({ parent: req.params.journeyID })
     .populate('author')
     .populate('parent')
     .sort(['timestamp', 'descending'])
-    .exec((err, entry_list) => {
+    .exec((err, entries) => {
       if (err) { return next(err); }
       // Success
-      res.json(entry_list);
+      res.json(entries);
     })
     .catch(err => {
       res.json(err);
     });
 }
-
-// Create a New Comment under an Entry
-exports.create_comment = async (req, res, next) => {
-  if (!req.user) {
-    console.log('FAILED: User is not authenticated.');
-    return next();
-  }
-
-  Entry.findById(req.params.id)
-    .exec((err, entry) => {
-      if (err) { return next(err); }
-
-      const newComment = new Comment ({
-        parent: entry,
-        text: req.body.text,
-        author: req.user
-      });
-
-      newComment.save(err => {
-        if (err) { return next(err); }
-        // Success
-        res.json(newComment);
-      });
-    });
-};
