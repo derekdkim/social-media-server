@@ -16,7 +16,7 @@ const UserSchema = new Schema({
   profilePicUrl: { type: String }, // TODO: Cloudinary integration
   intro: { type: String, maxLength: 160, default: 'Share something about yourself.' },
   _id: { type: String, default: UUID.v1 }
-});
+}, { versionKey: false });
 
 // Hash password before saving to database
 UserSchema.pre(

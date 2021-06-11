@@ -11,7 +11,7 @@ const JourneySchema = new Schema ({
   likedBy: { type: Array, default: [] },
   tags: { type: Array, default: [] },
   privacy: { type: Number, min: 0, max: 2, default: 0 } // 0 - Public, 1 - Friends-only, 2 - Private
-});
+}, { versionKey: false });
 
 // Virtual for journey URL, used for redirects
 JourneySchema

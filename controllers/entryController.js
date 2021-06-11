@@ -1,6 +1,7 @@
 const Entry = require('../models/entry');
 const Journey = require('../models/journey');
 const Comment = require('../models/comment');
+const async = require('async');
 
 // Create New Entry
 exports.createEntry = (req, res, next) => {
@@ -60,10 +61,26 @@ exports.deleteEntry = (req, res, next) => {
       if (err) { return next(err); }
 
       if (req.user._id === entry.author._id) {
-        Entry.findByIdAndDelete(req.params.entryID, function (err) {
+        let commentCount = 0;
+        async.series([
+          function(callback) {
+            Comment.deleteMany({ parent: req.params.entryID }, (err, result) => {
+              if (err) { return next(err); }
+
+              if (result.deletedCount > 0) {
+                commentCount += result.deletedCount;
+                callback(null);
+              }
+            });
+          },
+          function(callback) {
+            Entry.findByIdAndDelete(req.params.entryID).exec(callback);
+          }
+        ], 
+        function (err, result) {
           if (err) { return next(err); }
-          // Success
-          res.json({ message: 'success' });
+
+          res.json({ message: 'success', commentCount: commentCount });
         });
       } else {
         res.json ({ message: 'Permission denied: User is not the author.'});

@@ -6,14 +6,11 @@ exports.displayComments = (req, res, next) => {
   Comment.find({ parent: req.params.entryID })
     .populate('author')
     .populate('parent')
-    .sort('timestamp', 'ascending')
+    .sort({ timestamp: 1 })
     .exec((err, comments) => {
       if (err) { return next(err); }
 
       res.json(comments);
-    })
-    .catch((err) => {
-      res.json(err);
     });
 }
 

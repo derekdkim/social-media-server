@@ -1,4 +1,6 @@
 const Journey = require('../models/journey');
+const Entry = require('../models/entry');
+const Comment = require('../models/comment');
 const async = require('async');
 const User = require('../models/user');
 
@@ -154,7 +156,7 @@ exports.editJourney = (req, res, next) => {
 
 // Remove journey
 // TODO: Need to remove all entries and comments referencing this journey when it gets deleted
-exports.deleteJourney = (req, res, next) => {
+exports.deleteJourney = async (req, res, next) => {
   async.parallel({
     user: function (callback) {
       User.findById(req.user._id).exec(callback);
@@ -165,11 +167,57 @@ exports.deleteJourney = (req, res, next) => {
         .exec(callback);
     } 
   }, function (err, results) {
+
+    // Verify that the current user is the author
     if (results.user._id === results.journey.author._id) {
-      Journey.findByIdAndDelete(req.params.id, function (err) {
+      let entryArr;
+      let commentCount = 0;
+      let entryCount = 0;
+
+      async.series([
+        function(callback) {
+          // Find child entries of the journey
+          Entry.find({ parent: req.params.id })
+            .exec((err, entries) => {
+              if (err) { return next(err); }
+
+              // Make an array with only entry IDs
+              entryArr = entries;
+              callback(null, 'one');
+            });
+        },
+        function(callback) {
+          // Delete all child comments         
+          Comment.deleteMany({ 'parent': { '$in': entryArr } }, (err, result) => {
+            if (err) { return next(err); }
+
+            if (result.deletedCount > 0) {
+              commentCount += result.deletedCount;
+            }
+            callback(null, 'two');
+          });
+        },
+        function(callback) {
+          // Delete child entries
+          Entry.deleteMany({ parent: req.params.id }, (err, result) => {
+            if (err) { return next (err); }
+
+            if (result.deletedCount > 0) {
+              entryCount += result.deletedCount;
+            }
+            callback(null, 'three');
+          });
+        },
+        function(callback) {
+          // Delete the journey itself
+          Journey.findByIdAndDelete(req.params.id).exec(callback);
+        }
+      ], 
+      // Send response JSON
+      function (err, results) {
         if (err) { return next(err); }
 
-        res.json({ message: 'delete success' });
+        res.json({ message: 'delete success', entryCount: entryCount, commentCount: commentCount });
       });
     }
   });

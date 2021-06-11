@@ -202,7 +202,9 @@ describe('Journey Test', () => {
   });
 
   it('Users can delete their journeys', async (done) => {
-    let journeyId;
+    let journeyId, entryId;
+
+    let childText = { text: 'Something something text.' };
 
     // Create journey
     await request(app)
@@ -217,6 +219,43 @@ describe('Journey Test', () => {
         done(err);
       });
 
+    // Create entry #1
+    await request(app)
+      .post(`/entries/${journeyId}/new`)
+      .set('Authorization', `Bearer ${token0}`)
+      .send(childText)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryId = res.body.entry._id;
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Create entry #2
+    await request(app)
+      .post(`/entries/${journeyId}/new`)
+      .set('Authorization', `Bearer ${token0}`)
+      .send(childText)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Create comment
+    await request(app)
+      .post(`/comments/${entryId}/new`)
+      .set('Authorization', `Bearer ${token0}`)
+      .send(childText)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch((err) => {
+        done(err);
+      });
+
     // Delete journey
     await request(app)
       .delete(`/journeys/${journeyId}`)
@@ -224,6 +263,8 @@ describe('Journey Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toBe('delete success');
+        expect(res.body.entryCount).toBe(2);
+        expect(res.body.commentCount).toBe(1);
       })
       .then(() => {
         done();

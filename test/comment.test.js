@@ -22,6 +22,15 @@ const testInput = [
   },
   {
     text: 'Just editing comments'
+  },
+  {
+    text: 'First comment'
+  },
+  {
+    text: 'Second comment'
+  },
+  {
+    text: 'Third comment'
   }
 ];
 
@@ -168,6 +177,62 @@ describe('Comment Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toBe('success');
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  it('Can fetch all comments in an entry', async (done) => {
+    let commentArr = [];
+    // Create comment #1
+    await request(app)
+      .post(`/comments/${parentEntry._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[2])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        commentArr.push(res.body.comment);
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Create comment #2
+    await request(app)
+      .post(`/comments/${parentEntry._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[3])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        commentArr.push(res.body.comment);
+      })
+      .catch((err) => {
+        done(err);
+      });
+
+    // Create comment #3
+    await request(app)
+      .post(`/comments/${parentEntry._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[4])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        commentArr.push(res.body.comment);
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    await request(app)
+      .get(`/comments/${parentEntry._id}/all`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual(expect.arrayContaining(commentArr));
       })
       .then(() => {
         done();

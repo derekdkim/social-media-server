@@ -4,8 +4,6 @@ const request = require('supertest');
 require('dotenv').config();
 
 const app = require('./testApp');
-const User = require('../models/user');
-const Entry = require('../models/entry');
 
 const userData = { 
   username: 'entryTestUser', 
@@ -149,7 +147,7 @@ describe('Entry Test', () => {
       });
   });
 
-  it('User can delete their entry', async(done) => {
+  it('User can delete their entry along with child comments', async(done) => {
     let entryID;
 
     // Create entry
@@ -161,7 +159,31 @@ describe('Entry Test', () => {
         expect(res.statusCode).toBe(200);
         entryID = res.body.entry._id;
       })
-      .catch((err) => {
+      .catch(err => {
+        done(err);
+      });
+
+    // Create comment #1
+    await request(app)
+      .post(`/comments/${entryID}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Create comment #2
+    await request(app)
+      .post(`/comments/${entryID}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
         done(err);
       });
     
@@ -172,6 +194,7 @@ describe('Entry Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toBe('success');
+        expect(res.body.commentCount).toBe(2);
       })
       .then(() => {
         done();
