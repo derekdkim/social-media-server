@@ -28,7 +28,7 @@ const signUpReq = async (input, done) => {
     .then(res => {
       user = res.body.user;
     })
-    .catch((err) => {
+    .catch(err => {
       done(err);
     });
   return user;
@@ -43,7 +43,7 @@ const logInReq = async (username, done) => {
   .then((res) => {
     token = res.body.token;
   })
-  .catch((err) => {
+  .catch(err => {
     done(err);
   });
   return token;
@@ -84,7 +84,7 @@ describe('Entry Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -106,7 +106,7 @@ describe('Entry Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -123,7 +123,7 @@ describe('Entry Test', () => {
         expect(res.statusCode).toBe(200);
         entryID = res.body.entry._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -142,7 +142,7 @@ describe('Entry Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -199,7 +199,7 @@ describe('Entry Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });

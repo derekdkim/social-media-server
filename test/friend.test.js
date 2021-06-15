@@ -46,7 +46,7 @@ const signUpReq = async (input, done) => {
     .then(res => {
       user = res.body.user;
     })
-    .catch((err) => {
+    .catch(err => {
       done(err);
     });
   return user;
@@ -61,7 +61,7 @@ const logInReq = async (username, done) => {
   .then((res) => {
     token = res.body.token;
   })
-  .catch((err) => {
+  .catch(err => {
     done(err);
   });
   return token;
@@ -113,7 +113,7 @@ describe('Friend Request Test', () => {
       .then(() => { 
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -147,7 +147,7 @@ describe('Friend Request Test', () => {
       .then(() => { 
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -180,7 +180,7 @@ describe('Friend Request Test', () => {
       .then(() => { 
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -222,7 +222,7 @@ describe('Friend Request Test', () => {
       .then(() => { 
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -250,7 +250,7 @@ describe('Friend Request Test', () => {
       .then(() => { 
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });

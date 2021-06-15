@@ -15,7 +15,7 @@ const UserSchema = new Schema({
   pendingFriends: { type: Array, default: [] },
   profilePicUrl: { type: String }, // TODO: Cloudinary integration
   intro: { type: String, maxLength: 160, default: 'Share something about yourself.' },
-  _id: { type: String, default: UUID.v1 }
+  uuid: { type: String, default: UUID.v4 }
 }, { versionKey: false });
 
 // Hash password before saving to database

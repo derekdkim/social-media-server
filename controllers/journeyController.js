@@ -10,40 +10,44 @@ exports.displayAllJourneys = (req, res, next) => {
     public: function(callback) {
       // Fetch all public journeys in the collection
       Journey.find({ privacy: 0 })
-        .sort(['timestamp', 'descending'])
+        .sort({ timestamp: -1 })
         .exec(callback);
     },
     friendsOnly: function(callback) {
+      const idList = [req.user._id, ...req.user.currentFriends];
+
       // Fetch friends-only journeys
-      Journey.find({ author: { $in: [req.user._id, ...req.user.currentFriends] }, privacy: 1 })
-        .sort(['timestamp', 'descending'])
+      Journey.find({ author: { $in: idList }, privacy: 1 })
+        .sort({ timestamp: -1 })
+        .exec(callback);
+    },
+    myPrivate: function(callback) {
+      Journey.find({ author: req.user, privacy: 2 })
+        .sort({ timestamp: -1 })
         .exec(callback);
     }
   }, (err, results) => {
     if (err) { return next(err); }
     
     // TODO: Deal with chronological sorting in combined journeys array
-    const journeyList = [...results.public, ...results.friendsOnly];
+    const journeyList = [...results.public, ...results.friendsOnly, ...results.myPrivate];
     // Send combined journey list
-    res.json (journeyList);
+    res.json({ journeys: journeyList });
   });
   // TODO: Display only 10 at a time, with pages
 }
 
 // Display yours and friends' journeys
 exports.displayFriendsJourneys = (req, res, next) => {
-  const friendList = req.user.currentFriends;
+  const idList = [req.user._id, ...req.user.currentFriends];
 
   // Fetch journeys with authors that are in friends' list except private journeys
-  Journey.find({ author: { $in: [req.user._id, ...friendList] }, privacy: { $ne: 2 } })
-    .sort(['timestamp', 'descending'])
+  Journey.find({ author: { $in: idList }, privacy: { $ne: 2 } })
+    .sort({ timestamp: -1 })
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
-      res.json(journeys);
-    })
-    .catch(err => {
-      res.json(err);
+      res.json({ journeys: journeys });
     });
 }
 
@@ -51,7 +55,7 @@ exports.displayFriendsJourneys = (req, res, next) => {
 exports.displayMyJourneys = (req, res, next) => {
   // Fetch journey with author matching req.user.id
   Journey.find({ author: req.user.id })
-    .sort(['timestamp', 'descending'])
+    .sort({ timestamp: -1 })
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
@@ -169,7 +173,7 @@ exports.deleteJourney = async (req, res, next) => {
   }, function (err, results) {
 
     // Verify that the current user is the author
-    if (results.user._id === results.journey.author._id) {
+    if (results.user.uuid === results.journey.author.uuid) {
       let entryArr;
       let commentCount = 0;
       let entryCount = 0;

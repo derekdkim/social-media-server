@@ -43,7 +43,7 @@ const signUpReq = async (input, done) => {
     .then(res => {
       user = res.body.user;
     })
-    .catch((err) => {
+    .catch(err => {
       done(err);
     });
   return user;
@@ -58,7 +58,7 @@ const logInReq = async (username, done) => {
   .then((res) => {
     token = res.body.token;
   })
-  .catch((err) => {
+  .catch(err => {
     done(err);
   });
   return token;
@@ -81,7 +81,7 @@ describe('Comment Test', () => {
       .then((res) => {
         parentJourney = res.body.journey;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
 
@@ -96,7 +96,7 @@ describe('Comment Test', () => {
         parentEntry = res.body.entry;
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -116,7 +116,7 @@ describe('Comment Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -132,7 +132,7 @@ describe('Comment Test', () => {
         expect(res.statusCode).toBe(200);
         commentID = res.body.comment._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -150,7 +150,7 @@ describe('Comment Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -166,7 +166,7 @@ describe('Comment Test', () => {
         expect(res.statusCode).toBe(200);
         commentID = res.body.comment._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -181,7 +181,7 @@ describe('Comment Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -197,7 +197,7 @@ describe('Comment Test', () => {
         expect(res.statusCode).toBe(200);
         commentArr.push(res.body.comment);
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -210,7 +210,7 @@ describe('Comment Test', () => {
         expect(res.statusCode).toBe(200);
         commentArr.push(res.body.comment);
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
 
@@ -223,7 +223,7 @@ describe('Comment Test', () => {
         expect(res.statusCode).toBe(200);
         commentArr.push(res.body.comment);
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -237,7 +237,7 @@ describe('Comment Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });

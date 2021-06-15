@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 import 'regenerator-runtime/runtime';
+import user from '../models/user';
 const request = require('supertest');
 require('dotenv').config();
 
@@ -21,6 +22,20 @@ const userData = [
     lastName: 'McTesterface',
     birthDate: new Date()
   },
+  { 
+    username: 'privacyTestUser', 
+    password: 'testest',
+    firstName: 'Tester',
+    lastName: 'McTesterface',
+    birthDate: new Date()
+  },
+  { 
+    username: 'friendsOnlyTestUser', 
+    password: 'testest',
+    firstName: 'Tester',
+    lastName: 'McTesterface',
+    birthDate: new Date()
+  }
 ];
 
 const testInput = [
@@ -34,6 +49,10 @@ const testInput = [
     dueDate: new Date(2021, 11, 17),
     tags: ['test', 'art', 'life'],
     privacy: 0
+  },
+  {
+    title: 'Friends-only Journey',
+    privacy: 1
   },
   {
     title: 'Private Journey',
@@ -50,7 +69,7 @@ const signUpReq = async (input, done) => {
     .then(res => {
       user = res.body.user;
     })
-    .catch((err) => {
+    .catch(err => {
       done(err);
     });
   return user;
@@ -65,21 +84,25 @@ const logInReq = async (username, done) => {
   .then((res) => {
     token = res.body.token;
   })
-  .catch((err) => {
+  .catch(err => {
     done(err);
   });
   return token;
 }
 
 describe('Journey Test', () => {
-  let user0, user1, token0, token1;
+  let user0, user1, user2, user3, token0, token1, token2, token3;
 
   beforeAll( async () => {
     user0 = await signUpReq(userData[0]);
     user1 = await signUpReq(userData[1]);
+    user2 = await signUpReq(userData[2]);
+    user3 = await signUpReq(userData[3]);
 
     token0 = await logInReq(userData[0].username);
     token1 = await logInReq(userData[1].username);
+    token2 = await logInReq(userData[2].username);
+    token3 = await logInReq(userData[3].username);
   });
 
 
@@ -96,7 +119,7 @@ describe('Journey Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -119,7 +142,7 @@ describe('Journey Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -136,7 +159,7 @@ describe('Journey Test', () => {
         expect(res.statusCode).toBe(200);
         journeyId = res.body.journey._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -153,7 +176,7 @@ describe('Journey Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -179,7 +202,7 @@ describe('Journey Test', () => {
         expect(res.statusCode).toBe(200);
         oldJourneyId = res.body.journey._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -196,7 +219,7 @@ describe('Journey Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -215,7 +238,7 @@ describe('Journey Test', () => {
         expect(res.statusCode).toBe(200);
         journeyId = res.body.journey._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
 
@@ -228,7 +251,7 @@ describe('Journey Test', () => {
         expect(res.statusCode).toBe(200);
         entryId = res.body.entry._id;
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -240,7 +263,7 @@ describe('Journey Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
     
@@ -252,7 +275,7 @@ describe('Journey Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
       })
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
 
@@ -269,11 +292,219 @@ describe('Journey Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         console.log('delete failed');
         done(err);
       });
   });
+
+  it('User can view public journeys from other users', async (done) => {
+    // Create journey with user0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View journey with user1
+    await request(app)
+      .get('/journeys/all')
+      .set('Authorization', `Bearer ${token1}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.journeys.length).toBeGreaterThan(0);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('User cannot view friends-only journeys of non-friends', async (done) => {
+    // Create journey with user0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[2])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View journey with user1
+    await request(app)
+      .get('/journeys/friends')
+      .set('Authorization', `Bearer ${token1}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.journeys.length).toBe(0);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('User can view their friends journeys but not their private journeys', async (done) => {
+    // Friend request
+    await request(app)
+      .post(`/friends/${user1._id}/request`)
+      .set('Authorization', `Bearer ${token2}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+
+    // Accept friend
+    await request(app)
+      .put(`/friends/${user2._id}/accept`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+
+    // Create friends-only journey
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[2])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+
+    // Create private journey
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[3])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View journeys with user0
+    await request(app)
+      .get('/journeys/all')
+      .set('Authorization', `Bearer ${token2}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        // User should not be able to view the private journey
+        expect(res.body.journeys.every(journey => journey.privacy != 2)).toBe(true);
+        // User should be able to view the friends only journey
+        expect(res.body.journeys.some(journey => journey.privacy === 1)).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('User can see their own private journeys', async (done) => {
+    // Create private journey
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[3])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View private journey with public view
+    await request(app)
+      .get('/journeys/all')
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        // At least 1 journey is private and is their own
+        expect(res.body.journeys.some(journey => journey.privacy === 2 && journey.author === user1._id)).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('Friends only view does not show non-friends journeys', async (done) => {
+    // Friend request
+    await request(app)
+      .post(`/friends/${user3._id}/request`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+
+    // Accept friend
+    await request(app)
+      .put(`/friends/${user1._id}/accept`)
+      .set('Authorization', `Bearer ${token3}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Create friends-only journey
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[2])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View only friends journeys
+    await request(app)
+      .get('/journeys/friends')
+      .set('Authorization', `Bearer ${token3}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        // Every journey's author should be in the author's friend list
+        expect(res.body.journeys.every(journey => journey.author === user1._id )).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+
 
   afterAll(async (done) => {
     await mongoose.connection.close();
