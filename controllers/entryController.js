@@ -36,7 +36,7 @@ exports.editEntry = (req, res, next) => {
     .exec((err, entry) => {
       if (err) { return next(err); }
 
-      if (req.user._id === entry.author._id) {
+      if (req.user.uuid === entry.author.uuid) {
         const changedEntry = {
           text: req.body.text,
           _id: req.params.entryID
@@ -48,7 +48,7 @@ exports.editEntry = (req, res, next) => {
           res.json({ message: 'success', entry: result });
         });
       } else {
-        res.json ({ message: 'Permission denied: User is not the author.'});
+        res.json ({ message: 'Permission denied: User is not the author.', entry: entry.author._id, user: req.user._id, result: entry.author._id === req.user._id });
       }
     });
 }
@@ -60,7 +60,7 @@ exports.deleteEntry = (req, res, next) => {
     .exec((err, entry) => {
       if (err) { return next(err); }
 
-      if (req.user._id === entry.author._id) {
+      if (req.user.uuid === entry.author.uuid) {
         let commentCount = 0;
         async.series([
           function(callback) {

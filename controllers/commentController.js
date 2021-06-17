@@ -46,12 +46,12 @@ exports.editComment = (req, res, next) => {
     .exec((err, comment) => {
       if (err) { return next(err); }
 
-      const changedComment = {
-        text: req.body.text,
-        _id: req.params.commentID
-      }
+      if (comment.author.uuid === req.user.uuid) {
+        const changedComment = {
+          text: req.body.text,
+          _id: req.params.commentID
+        }
 
-      if (comment.author._id === req.user._id) {
         Comment.findByIdAndUpdate(req.params.commentID, changedComment, { new: true }, (err, result) => {
           if (err) { return next(err); }
 
@@ -68,7 +68,7 @@ exports.deleteComment = (req, res, next) => {
     .exec((err, comment) => {
       if (err) { return next(err); }
 
-      if (comment.author._id === req.user._id) {
+      if (comment.author.uuid === req.user.uuid) {
         Comment.findByIdAndDelete(req.params.commentID, (err, result) => {
           if (err) { return next(err); }
 
