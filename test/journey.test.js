@@ -504,6 +504,48 @@ describe('Journey Test', () => {
       });
   });
 
+  it("My journeys only returns user's journey", async (done) => {
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+      
+    // Create a new journey for user 1
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Display my journeys only
+    await request(app)
+      .get('/journeys/private')
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        // Every journey in the results must have user 1 as its author
+        expect(res.body.journeys.every(journey => journey.author === user1._id)).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
 
 
   afterAll(async (done) => {

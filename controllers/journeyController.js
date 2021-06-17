@@ -54,15 +54,12 @@ exports.displayFriendsJourneys = (req, res, next) => {
 // Display only my journeys
 exports.displayMyJourneys = (req, res, next) => {
   // Fetch journey with author matching req.user.id
-  Journey.find({ author: req.user.id })
+  Journey.find({ author: req.user._id })
     .sort({ timestamp: -1 })
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
-      res.json(journeys);
-    })
-    .catch(err => {
-      res.json(err);
+      res.json({ journeys: journeys });
     });
 }
 
