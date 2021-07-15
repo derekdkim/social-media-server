@@ -242,6 +242,52 @@ describe('Comment Test', () => {
       });
   });
 
+  it('User can like and dislike comments', async (done) => {
+    let commentId;
+
+    // Create comment
+    await request(app)
+      .post(`/comments/${parentEntry._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        commentId = res.body.comment._id;
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Like comment as the same user
+    await request(app)
+      .put(`/comments/${commentId}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy.includes(user.uuid)).toBe(true);
+        expect(res.body.likedCount).toBeGreaterThan(0);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Unlike comment
+    await request(app)
+      .put(`/comments/${commentId}/unlike`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy).toStrictEqual([]);
+        expect(res.body.likedCount).toBe(0);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   afterAll( async (done) => {
     await mongoose.connection.close();
     done();

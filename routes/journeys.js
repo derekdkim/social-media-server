@@ -4,6 +4,8 @@ const passport = require('passport');
 
 const journeyController = require('../controllers/journeyController');
 
+const JWTauth = passport.authenticate('jwt', { session: false });
+
 // UNTESTED
 // GET: Display all journeys
 router.get('/all', passport.authenticate('jwt', { session: false }), journeyController.displayAllJourneys);
@@ -27,6 +29,12 @@ router.put('/:id', passport.authenticate('jwt', { session: false }), journeyCont
 
 // DELETE: Delete specified journey
 router.delete('/:id', passport.authenticate('jwt', { session: false }), journeyController.deleteJourney);
+
+// UPDATE: Like specified journey
+router.put('/like/:id', passport.authenticate('jwt', { session: false }), journeyController.likeJourney);
+
+// UPDATE: Unlike specified journey
+router.put('/unlike/:id', passport.authenticate('jwt', { session: false }), journeyController.unlikeJourney);
 
 // POST: Join specified journey as participant
 router.post('/:id/join', (req,res, next) => {

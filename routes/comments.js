@@ -16,5 +16,11 @@ router.delete('/:commentID', passport.authenticate('jwt', { session: false }), c
 // GET: Display all comments
 router.get('/:entryID/all', commentController.displayComments);
 
+// UPDATE: Like specified comment
+router.put('/:commentID/like', passport.authenticate('jwt', { session: false }), commentController.likeComment);
+
+// UPDATE: Like specified comment
+router.put('/:commentID/unlike', passport.authenticate('jwt', { session: false }), commentController.unlikeComment);
+
 
 module.exports = router;

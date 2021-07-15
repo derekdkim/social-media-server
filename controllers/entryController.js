@@ -103,3 +103,45 @@ exports.displayEntries = (req, res, next) => {
       res.json(err);
     });
 }
+
+// Like entry
+exports.likeEntry = async (req, res, next) => {
+  // Fetch entry in question
+  Entry.findById(req.params.entryID)
+    .exec((err, entry) => {
+      if (err) { return next(err); }
+
+      // Only proceed if user has not yet liked this entry
+      if (entry.likedBy.includes(req.user.uuid)) {
+        res.json({ message: 'This user has already liked this entry.'});
+      } else {
+        // Push requesting user's uuid to the likedBy array to prevent duplicate likes from the same user
+        Entry.findByIdAndUpdate(req.params.entryID, { $push: { likedBy: req.user.uuid} }, { new: true }, (err, result) => {
+          if (err) { return next(err); }
+
+          res.json({ message: 'success', likedBy: result.likedBy, likedCount: result.likedBy.length });
+        });
+      }
+    });
+}
+
+// Unlike entry
+exports.unlikeEntry = async (req, res, next) => {
+  // Fetch entry in question
+  Entry.findById(req.params.entryID)
+    .exec((err, entry) => {
+      if (err) { return next(err); }
+
+      // Only proceed if user has not yet liked this entry
+      if (entry.likedBy.includes(req.user.uuid)) {
+        // Pull requesting user's uuid from the likedBy array
+        Entry.findByIdAndUpdate(req.params.entryID, { $pull: { likedBy: req.user.uuid} }, { new: true }, (err, result) => {
+          if (err) { return next(err); }
+
+          res.json({ message: 'success', likedBy: result.likedBy, likedCount: result.likedBy.length });
+        });
+      } else {
+        res.json({ message: 'This user has not liked this entry.'});
+      }
+    });
+}

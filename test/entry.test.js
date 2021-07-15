@@ -204,6 +204,52 @@ describe('Entry Test', () => {
       });
   });
 
+  it('User can like and dislike entries', async (done) => {
+    let entryId;
+
+    // Create entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryId = res.body.entry._id;
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Like entry as the same user
+    await request(app)
+      .put(`/entries/${parentJourney._id}/${entryId}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy.includes(user.uuid)).toBe(true);
+        expect(res.body.likedCount).toBeGreaterThan(0);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Unlike entry
+    await request(app)
+      .put(`/entries/${parentJourney._id}/${entryId}/unlike`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy).toStrictEqual([]);
+        expect(res.body.likedCount).toBe(0);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   afterAll(async (done) => {
     await mongoose.connection.close();
     done();

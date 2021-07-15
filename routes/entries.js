@@ -25,5 +25,10 @@ router.put('/:journeyID/:entryID', entryController.editEntry);
 // DELETE: Delete entry
 router.delete('/:journeyID/:entryID', entryController.deleteEntry);
 
+// UPDATE: Like specified entry
+router.put('/:journeyID/:entryID/like', passport.authenticate('jwt', { session: false }), entryController.likeEntry);
+
+// UPDATE: Unlike specified entry
+router.put('/:journeyID/:entryID/unlike', passport.authenticate('jwt', { session: false }), entryController.unlikeEntry);
 
 module.exports = router;

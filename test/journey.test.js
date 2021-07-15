@@ -546,6 +546,79 @@ describe('Journey Test', () => {
       });
   });
 
+  it('Users can like a journey if they have not already liked it', async (done) => {
+    let journeyId;
+
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        journeyId = res.body.journey._id;
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // user 1 likes user 0's journey
+    await request(app)
+      .put(`/journeys/like/${journeyId}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy.includes(user1.uuid)).toBe(true);
+        expect(res.body.likedCount).toBeGreaterThan(0);        
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('Users can unlike a journey they previously liked', async (done) => {
+    let journeyId;
+
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        journeyId = res.body.journey._id;
+      });
+    
+    // User 1 likes user 0's journey
+    await request(app)
+      .put(`/journeys/like/${journeyId}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // User 1 unlikes said journey
+    await request(app)
+      .put(`/journeys/unlike/${journeyId}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.likedBy).toStrictEqual([]);
+        expect(res.body.likedCount).toBe(0);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
 
 
   afterAll(async (done) => {

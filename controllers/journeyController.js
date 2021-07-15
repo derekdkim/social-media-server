@@ -224,4 +224,46 @@ exports.deleteJourney = async (req, res, next) => {
   });
 }
 
+// Like journey
+exports.likeJourney = async (req, res, next) => {
+  // Fetch journey in question
+  Journey.findById(req.params.id)
+    .exec((err, journey) => {
+      if (err) { return next(err); }
+
+      // Only proceed if user has not yet liked this journey
+      if (journey.likedBy.includes(req.user.uuid)) {
+        res.json({ message: 'This user has already liked this journey.'});
+      } else {
+        // Push requesting user's uuid to the likedBy array to prevent duplicate likes from the same user
+        Journey.findByIdAndUpdate(req.params.id, { $push: { likedBy: req.user.uuid} }, { new: true }, (err, result) => {
+          if (err) { return next(err); }
+
+          res.json({ message: 'success', likedBy: result.likedBy, likedCount: result.likedBy.length });
+        });
+      }
+    });
+}
+
+// Unlike journey
+exports.unlikeJourney = async (req, res, next) => {
+  // Fetch journey in question
+  Journey.findById(req.params.id)
+    .exec((err, journey) => {
+      if (err) { return next(err); }
+
+      // Only proceed if user has not yet liked this journey
+      if (journey.likedBy.includes(req.user.uuid)) {
+        // Pull requesting user's uuid from the likedBy array
+        Journey.findByIdAndUpdate(req.params.id, { $pull: { likedBy: req.user.uuid} }, { new: true }, (err, result) => {
+          if (err) { return next(err); }
+
+          res.json({ message: 'success', likedBy: result.likedBy, likedCount: result.likedBy.length });
+        });
+      } else {
+        res.json({ message: 'This user has not liked this journey.'});
+      }
+    });
+}
+
 // Join journey
