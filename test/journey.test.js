@@ -620,6 +620,79 @@ describe('Journey Test', () => {
       });
   });
 
+  it('The author of the journey cannot join the journey', async (done) => {
+    let journeyId;
+
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        journeyId = res.body.journey._id;
+      });
+    
+    // User 0 attempts to join their own journey
+    await request(app)
+      .put(`/journeys/join/${journeyId}`)
+      .set('Authorization', `Bearer ${token0}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('The author of the journey cannot join or leave. They must delete the journey to remove it.');
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+  });
+
+  it('Other users can join and leave a journey', async (done) => {
+    let journeyId;
+
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        journeyId = res.body.journey._id;
+      });
+    
+    // User 1 attempts to join the above journey
+    await request(app)
+      .put(`/journeys/join/${journeyId}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.participants.includes(user1.uuid)).toBe(true);
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // User 1 attempts to leave the journey
+    await request(app)
+      .put(`/journeys/leave/${journeyId}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.participants.includes(user1.uuid)).toBe(false);
+      })
+      .then(() => {
+        done();
+      })
+      .catch((err) => {
+        done(err);
+      });
+
+  });
+
 
   afterAll(async (done) => {
     await mongoose.connection.close();

@@ -36,10 +36,10 @@ router.put('/like/:id', passport.authenticate('jwt', { session: false }), journe
 // UPDATE: Unlike specified journey
 router.put('/unlike/:id', passport.authenticate('jwt', { session: false }), journeyController.unlikeJourney);
 
-// POST: Join specified journey as participant
-router.post('/:id/join', (req,res, next) => {
-  // Placeholder
-  res.send('JOIN journey');
-});
+// UPDATE: Join specified journey as participant
+router.put('/join/:id', JWTauth, journeyController.joinJourney);
+
+// UPDATE: Leave specified journey
+router.put('/leave/:id', JWTauth, journeyController.leaveJourney);
 
 module.exports = router;

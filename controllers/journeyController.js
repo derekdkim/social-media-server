@@ -157,7 +157,7 @@ exports.editJourney = (req, res, next) => {
 
 // Remove journey
 // TODO: Need to remove all entries and comments referencing this journey when it gets deleted
-exports.deleteJourney = async (req, res, next) => {
+exports.deleteJourney = (req, res, next) => {
   async.parallel({
     user: function (callback) {
       User.findById(req.user._id).exec(callback);
@@ -225,7 +225,7 @@ exports.deleteJourney = async (req, res, next) => {
 }
 
 // Like journey
-exports.likeJourney = async (req, res, next) => {
+exports.likeJourney = (req, res, next) => {
   // Fetch journey in question
   Journey.findById(req.params.id)
     .exec((err, journey) => {
@@ -246,13 +246,13 @@ exports.likeJourney = async (req, res, next) => {
 }
 
 // Unlike journey
-exports.unlikeJourney = async (req, res, next) => {
+exports.unlikeJourney = (req, res, next) => {
   // Fetch journey in question
   Journey.findById(req.params.id)
     .exec((err, journey) => {
       if (err) { return next(err); }
 
-      // Only proceed if user has not yet liked this journey
+      // Only proceed if user already liked this journey
       if (journey.likedBy.includes(req.user.uuid)) {
         // Pull requesting user's uuid from the likedBy array
         Journey.findByIdAndUpdate(req.params.id, { $pull: { likedBy: req.user.uuid} }, { new: true }, (err, result) => {
@@ -267,3 +267,55 @@ exports.unlikeJourney = async (req, res, next) => {
 }
 
 // Join journey
+exports.joinJourney = async (req, res, next) => {
+  if (req.user) {
+    Journey.findById(req.params.id)
+      .populate('author')
+      .exec((err, journey) => {
+        if (err) { return next(err); }
+        
+        // The author of the journey cannot join or leave
+        if (journey.author.uuid != req.user.uuid) {
+          // Proceed only if user has not yet joined this journey
+          if (!journey.participants.includes(req.user.uuid)) {
+            Journey.findByIdAndUpdate(req.params.id, { $push: { participants: req.user.uuid } }, { new: true }, (err, result) => {
+              if (err) { return next(err); }
+
+              res.json({ message: 'success', participants: result.participants, user: req.user, author: journey.author });
+            });
+          }
+        } else {
+          res.json({ message: 'The author of the journey cannot join or leave. They must delete the journey to remove it.'});
+        }
+      });
+  } else {
+    res.json({ message: 'Error: Please log-in to join this journey.' });
+  }
+}
+
+// Leave journey
+exports.leaveJourney = async (req, res, next) => {
+  if (req.user) {
+    Journey.findById(req.params.id)
+      .populate('author')
+      .exec((err, journey) => {
+        if (err) { return next(err); }
+
+        // The author of the journey cannot join or leave
+        if (journey.author.uuid != req.user.uuid) {
+          // Proceed only if user is already a participant
+          if (journey.participants.includes(req.user.uuid)) {
+            Journey.findByIdAndUpdate(req.params.id, { $pull: { participants: req.user.uuid } }, { new: true }, (err, result) => {
+              if (err) { return next(err); }
+
+              res.json({ message: 'success', participants: result.participants });
+            });
+          }
+        } else {
+          res.json({ message: 'The author of the journey cannot join or leave. They must delete the journey to remove it.'});
+        }
+      });
+  } else {
+    res.json({ message: 'Error: Please log-in to join this journey.' });
+  }
+}
