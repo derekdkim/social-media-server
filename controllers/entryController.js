@@ -11,21 +11,27 @@ exports.createEntry = (req, res, next) => {
   }
 
   Journey.findById(req.params.journeyID)
+    .populate('author')
     .exec((err, journey) => {
       if (err) { return next(err); }
 
-      const newEntry = new Entry ({
-        parent: journey,
-        text: req.body.text,
-        author: req.user,
-        timestamp: new Date()
-      });
+      // Check if user is a participant or author of parent journey
+      if (journey.participants.includes(req.user.uuid) || journey.author.uuid === req.user.uuid) {
+        const newEntry = new Entry ({
+          parent: journey,
+          text: req.body.text,
+          author: req.user,
+          timestamp: new Date()
+        });
 
-      newEntry.save(err => {
-        if (err) { return next(err); }
-        // Success
-        res.json({entry: newEntry});
-      });
+        newEntry.save(err => {
+          if (err) { return next(err); }
+          // Success
+          res.json({ message: 'success', entry: newEntry });
+        });
+      } else {
+        res.json({ message: 'User must be a participant or author to create an entry in this journey' });
+      }
     });
 }
 
