@@ -40,7 +40,7 @@ app.use('/comments', passport.authenticate('jwt', { session: false }), commentsR
 app.use('/users', usersRouter);
 
 // App test
-app.get('/', function (req, res) => {
+app.get('/', function (req, res) {
   res.send('Welcome to the social media API. This app is up and running.');
 });
 
