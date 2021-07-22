@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon --exec babel-node ./bin/www",
+    "dev": "nodemon --exec babel-node ./bin/www",
+    "start": "node ./bin/www",
     "test": "jest --verbose false",
     "test-auth": "jest --verbose false auth.test.js",
     "test-entries": "jest --verbose false entry.test.js",
