@@ -32,10 +32,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Routers
 app.use('/entries', passport.authenticate('jwt', { session: false }), entriesRouter);
 app.use('/friends', passport.authenticate('jwt', { session: false }), friendsRouter);
 app.use('/journeys', passport.authenticate('jwt', { session: false }), journeysRouter);
 app.use('/comments', passport.authenticate('jwt', { session: false }), commentsRouter);
 app.use('/users', usersRouter);
+
+// App test
+app.get('/', function (req, res) => {
+  res.send('Welcome to the social media API. This app is up and running.');
+});
 
 module.exports = app;
