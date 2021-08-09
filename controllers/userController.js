@@ -65,6 +65,20 @@ const hash = (password) => {
   return bcrypt.hashSync(password, 10);
 }
 
+// Get User's Own Data
+exports.getMyInfo = (req, res, next) => {
+  User.findOne({ uuid: req.user.uuid })
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      if (user.uuid === req.user.uuid) {
+        res.json({ message: 'success', user: user });
+      } else {
+        res.json({ message: 'ERROR: UUID mismatch.' });
+      }
+    });
+}
+
 // Edit User Data
 exports.editUserInfo = (req, res, next) => {
   User.findById(req.user._id)
@@ -99,6 +113,8 @@ exports.editUserInfo = (req, res, next) => {
 
         // Overwrite MongoDB document
         User.findByIdAndUpdate(req.user._id, { $set: inputUserData }, { new: true }, (err, result) => {
+          if (err) { return next(err); }
+
           res.json({ message: 'success', user: result });
         });
         
