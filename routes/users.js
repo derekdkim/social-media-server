@@ -18,6 +18,9 @@ router.post('/log-in', userController.logIn);
 // GET: User log-out
 router.get('/log-out', userController.logOut)
 
+// GET: Get user's own info
+router.get('/get-myself', passport.authenticate('jwt', { session: false }), userController.getMyInfo);
+
 // UPDATE: Edit user's own info
 router.put('/edit', passport.authenticate('jwt', { session: false }), userController.editUserInfo);
 

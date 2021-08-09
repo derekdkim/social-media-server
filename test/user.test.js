@@ -67,6 +67,23 @@ describe('User Data Editing Test', () => {
     token1 = await logInReq(userData[1].username);
   });
 
+  it('User can fetch their own data for their profile page', async (done) => {
+    await request(app)
+      .get('/users/get-myself')
+      .set('Authorization', `Bearer ${token0}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.user.uuid).toBe(user0.uuid);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   it('User can edit name', async (done) => {
     await request(app)
       .put('/users/edit')
