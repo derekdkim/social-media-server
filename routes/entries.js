@@ -14,16 +14,16 @@ router.get('/', (req, res, next) => {
 });
 
 // GET: Display all entries
-router.get('/all', entryController.displayEntries);
+router.get('/:journeyID/all', entryController.displayEntries);
 
 // POST: Create new entry
 router.post('/:journeyID/new', passport.authenticate('jwt', { session: false }), entryController.createEntry);
 
 // UPDATE: Edit entry
-router.put('/:journeyID/:entryID', entryController.editEntry);
+router.put('/:journeyID/:entryID', passport.authenticate('jwt', { session: false }), entryController.editEntry);
 
 // DELETE: Delete entry
-router.delete('/:journeyID/:entryID', entryController.deleteEntry);
+router.delete('/:journeyID/:entryID', passport.authenticate('jwt', { session: false }), entryController.deleteEntry);
 
 // UPDATE: Like specified entry
 router.put('/:journeyID/:entryID/like', passport.authenticate('jwt', { session: false }), entryController.likeEntry);

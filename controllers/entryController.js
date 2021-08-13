@@ -99,14 +99,11 @@ exports.displayEntries = (req, res, next) => {
   Entry.find({ parent: req.params.journeyID })
     .populate('author')
     .populate('parent')
-    .sort(['timestamp', 'descending'])
+    .sort({ timestamp: -1 })
     .exec((err, entries) => {
       if (err) { return next(err); }
       // Success
-      res.json(entries);
-    })
-    .catch(err => {
-      res.json(err);
+      res.json({ message: 'success', entries: entries });
     });
 }
 

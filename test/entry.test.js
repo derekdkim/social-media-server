@@ -250,6 +250,40 @@ describe('Entry Test', () => {
       });
   });
 
+  it('User can view all entries in a journey', async (done) => {
+    let entryId, refEntry;
+
+    // Create an entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryId = res.body.entry._id;
+        refEntry = res.body.entry;
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // View all entries and look for the previously created entry
+    await request(app)
+      .get(`/entries/${parentJourney._id}/all`)
+      .set('Authorization', `Bearer ${token}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.entries.length).toBeGreaterThan(0);
+        expect(res.body.entries.some(entry => entry._id === refEntry._id)).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   afterAll(async (done) => {
     await mongoose.connection.close();
     done();
