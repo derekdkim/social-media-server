@@ -5,11 +5,6 @@ const async = require('async');
 
 // Create New Entry
 exports.createEntry = (req, res, next) => {
-  if (!req.user) {
-    console.log('FAILED: User is not authenticated.');
-    return next();
-  }
-
   Journey.findById(req.params.journeyID)
     .populate('author')
     .exec((err, journey) => {
