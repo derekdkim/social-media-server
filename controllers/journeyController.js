@@ -32,7 +32,7 @@ exports.displayAllJourneys = (req, res, next) => {
     // TODO: Deal with chronological sorting in combined journeys array
     const journeyList = [...results.public, ...results.friendsOnly, ...results.myPrivate];
     // Send combined journey list
-    res.json({ journeys: journeyList });
+    res.json({ message: 'success', journeys: journeyList });
   });
   // TODO: Display only 10 at a time, with pages
 }
@@ -47,7 +47,7 @@ exports.displayFriendsJourneys = (req, res, next) => {
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
-      res.json({ journeys: journeys });
+      res.json({ message: 'success', journeys: journeys });
     });
 }
 
@@ -59,7 +59,7 @@ exports.displayMyJourneys = (req, res, next) => {
     .exec((err, journeys) => {
       if (err) { return next(err); }
 
-      res.json({ journeys: journeys });
+      res.json({ message: 'success', journeys: journeys });
     });
 }
 
@@ -261,7 +261,7 @@ exports.unlikeJourney = (req, res, next) => {
           res.json({ message: 'success', likedBy: result.likedBy, likedCount: result.likedBy.length });
         });
       } else {
-        res.json({ message: 'This user has not liked this journey.'});
+        res.json({ message: 'This user has not liked this journey.' });
       }
     });
 }

@@ -28,7 +28,7 @@ exports.createFriendReq = (req, res, next) => {
     results.recipient.save();
     
     // return relevant info for testing
-    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -66,7 +66,7 @@ exports.acceptFriendReq = (req, res, next) => {
     results.recipient.save();
     
     // return relevant info for testing
-    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -100,7 +100,7 @@ exports.declineFriendReq = (req, res, next) => {
     results.recipient.save();
     
     // return relevant info for testing
-    res.json({message: 'success', sender: results.sender, recipient: results.recipient});
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -131,7 +131,7 @@ exports.removeFriend = (req, res, next) => {
     results.recipient.save();
     
     // return relevant info for testing
-    res.json({message: 'removal success', sender: results.sender, recipient: results.recipient});
+    res.json({ message: 'removal success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -146,7 +146,7 @@ exports.displayPendingFriends = (req, res, next) => {
     .exec((err, user) => {
       if (err) { return next(err); }
 
-      res.json(user.pendingFriends);
+      res.json({ message: 'success', pendingFriends: user.pendingFriends });
     });
 }
 
@@ -161,6 +161,6 @@ exports.displayCurrentFriends = (req, res, next) => {
     .exec((err, user) => {
       if (err) { return next(err); }
 
-      res.json(user.currentFriends);
+      res.json({ message: 'success', currentFriends: user.currentFriends });
     });
 }

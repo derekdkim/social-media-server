@@ -10,7 +10,7 @@ exports.displayComments = (req, res, next) => {
     .exec((err, comments) => {
       if (err) { return next(err); }
 
-      res.json(comments);
+      res.json({ message: 'success', comments: comments });
     });
 }
 
@@ -34,7 +34,7 @@ exports.createComment = (req, res, next) => {
       newComment.save(err => {
         if (err) { return next(err); }
         // Success
-        res.json({ comment: newComment });
+        res.json({ message: 'success', comment: newComment });
       });
     });
 };
