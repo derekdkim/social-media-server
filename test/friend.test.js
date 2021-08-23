@@ -245,7 +245,7 @@ describe('Friend Request Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
-        expect(res.body.includes(`${user1._id}`, `${user2._id}`)).toBe(true);
+        expect(res.body.pendingFriends.includes(`${user1._id}`, `${user2._id}`)).toBe(true);
       })
       .then(() => { 
         done();

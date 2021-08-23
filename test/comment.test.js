@@ -232,7 +232,7 @@ describe('Comment Test', () => {
       .set('Authorization', `Bearer ${token}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual(expect.arrayContaining(commentArr));
+        expect(res.body.comments).toEqual(expect.arrayContaining(commentArr));
       })
       .then(() => {
         done();

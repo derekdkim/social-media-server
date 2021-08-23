@@ -442,7 +442,7 @@ describe('Journey Test', () => {
       .then(res => {
         expect(res.statusCode).toBe(200);
         // At least 1 journey is private and is their own
-        expect(res.body.journeys.some(journey => journey.privacy === 2 && journey.author === user1._id)).toBe(true);
+        expect(res.body.journeys.some(journey => journey.privacy === 2 && journey.author.uuid === user1.uuid)).toBe(true);
       })
       .then(() => {
         done();
@@ -494,7 +494,7 @@ describe('Journey Test', () => {
       .then(res => {
         expect(res.statusCode).toBe(200);
         // Every journey's author should be in the author's friend list
-        expect(res.body.journeys.every(journey => journey.author === user1._id )).toBe(true);
+        expect(res.body.journeys.every(journey => journey.author.uuid === user1.uuid )).toBe(true);
       })
       .then(() => {
         done();
@@ -536,7 +536,7 @@ describe('Journey Test', () => {
       .then(res => {
         expect(res.statusCode).toBe(200);
         // Every journey in the results must have user 1 as its author
-        expect(res.body.journeys.every(journey => journey.author === user1._id)).toBe(true);
+        expect(res.body.journeys.every(journey => journey.author.uuid === user1.uuid)).toBe(true);
       })
       .then(() => {
         done();
