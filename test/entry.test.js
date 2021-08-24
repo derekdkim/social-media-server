@@ -195,6 +195,41 @@ describe('Entry Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toBe('success');
         expect(res.body.commentCount).toBe(2);
+        expect(res.body.commentsDeleted).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  it('User can delete an entry without comments', async (done) => {
+    let entryID;
+
+    // Create entry
+    await request(app)
+      .post(`/entries/${parentJourney._id}/new`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(testInput[0])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        entryID = res.body.entry._id;
+      })
+      .catch(err => {
+        done(err);
+      });
+    
+    // Delete entry
+    await request(app)
+      .delete(`/entries/${parentJourney._id}/${entryID}`)
+      .set('Authorization', `Bearer ${token}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.commentCount).toBe(0);
+        expect(res.body.commentsDeleted).toBe(false);
       })
       .then(() => {
         done();

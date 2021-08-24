@@ -63,25 +63,29 @@ exports.deleteEntry = (req, res, next) => {
 
       if (req.user.uuid === entry.author.uuid) {
         let commentCount = 0;
-        async.series([
-          function(callback) {
-            Comment.deleteMany({ parent: req.params.entryID }, (err, result) => {
-              if (err) { return next(err); }
+        let commentsDeleted = false;
 
-              if (result.deletedCount > 0) {
-                commentCount += result.deletedCount;
-                callback(null);
-              }
-            });
-          },
-          function(callback) {
-            Entry.findByIdAndDelete(req.params.entryID).exec(callback);
-          }
-        ], 
+        async.series([
+            function(callback) {
+                Comment.deleteMany({ parent: req.params.entryID }, (err, result) => {
+                  if (err) { return next(err); }
+
+                  if (result.deletedCount > 0) {
+                    commentCount += result.deletedCount;
+                    commentsDeleted = true;
+                  }
+                  
+                  callback(null);
+                });
+            },
+            function(callback) {
+              Entry.findByIdAndDelete(req.params.entryID).exec(callback);
+            }
+          ], 
         function (err, result) {
           if (err) { return next(err); }
 
-          res.json({ message: 'success', commentCount: commentCount });
+          res.json({ message: 'success', commentsDeleted: commentsDeleted, commentCount: commentCount });
         });
       } else {
         res.json ({ message: 'Permission denied: User is not the author.'});

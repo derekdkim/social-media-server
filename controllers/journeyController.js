@@ -189,7 +189,7 @@ exports.deleteJourney = (req, res, next) => {
 
               // Make an array with only entry IDs
               entryArr = entries;
-              callback(null, 'one');
+              callback(null);
             });
         },
         function(callback) {
@@ -200,7 +200,7 @@ exports.deleteJourney = (req, res, next) => {
             if (result.deletedCount > 0) {
               commentCount += result.deletedCount;
             }
-            callback(null, 'two');
+            callback(null);
           });
         },
         function(callback) {
@@ -211,7 +211,7 @@ exports.deleteJourney = (req, res, next) => {
             if (result.deletedCount > 0) {
               entryCount += result.deletedCount;
             }
-            callback(null, 'three');
+            callback(null);
           });
         },
         function(callback) {
