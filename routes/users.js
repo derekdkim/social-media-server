@@ -24,4 +24,10 @@ router.get('/get-myself', passport.authenticate('jwt', { session: false }), user
 // UPDATE: Edit user's own info
 router.put('/edit', passport.authenticate('jwt', { session: false }), userController.editUserInfo);
 
+// UPDATE: Change user's password
+router.put('/edit-pw', passport.authenticate('jwt', { session: false }), userController.changePassword);
+
+// DELETE: Delete user account
+router.delete('/delete-account', passport.authenticate('jwt', { session: false }), userController.deleteUserAccount);
+
 module.exports = router;

@@ -127,13 +127,33 @@ describe('User Data Editing Test', () => {
       });
   });
 
-  it('User can change password', async (done) => {
+  it('User can change their intro', async (done) => {
     await request(app)
       .put('/users/edit')
       .set('Authorization', `Bearer ${token0}`)
-      .send({ password: 'changedPassword101' })
-      .then((res) => {
+      .send({ intro: 'This is edited.' })
+      .then(res => {
         expect(res.statusCode).toBe(200);
+        expect(res.body.user.intro).toBe('This is edited.');
+        expect(res.body.user.uuid).toBe(user0.uuid);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        console.log('Error: Edit request failed.');
+        done(err);
+      })
+  });
+
+  it('User can change password', async (done) => {
+    await request(app)
+      .put('/users/edit-pw')
+      .set('Authorization', `Bearer ${token0}`)
+      .send({ currentPassword: 'testest', newPassword: 'changedPassword101' })
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
         // Validate password hash
         bcrypt.compare('changedPassword101', res.body.user.password, (err, res) => {
           expect(res).toBe(true);
@@ -143,8 +163,38 @@ describe('User Data Editing Test', () => {
       .then(() => {
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         console.log('Error: Edit request failed.');
+        done(err);
+      });
+  });
+
+  it('User can delete account', async (done) => {
+    // Delete Account
+    await request(app)
+      .delete('/users/delete-account')
+      .set('Authorization', `Bearer ${token1}`)
+      .send({ currentPassword: 'testest' })
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+      })
+      .catch(err => {
+        console.log('Error: Delete request failed.');
+        done(err);
+      });
+    
+    // Expect failed authentication
+    await request(app)
+      .get('/journeys/all')
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(401);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
         done(err);
       });
   });

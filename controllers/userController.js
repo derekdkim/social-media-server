@@ -91,6 +91,11 @@ exports.editUserInfo = (req, res, next) => {
           _id: req.user._id
         }
 
+        // Edit intro if it exists
+        if (req.body.intro) {
+          inputUserData.intro = req.body.intro;
+        }
+
         // Edit first name if it exists
         if (req.body.firstName) {
           inputUserData.firstName = req.body.firstName;
@@ -106,11 +111,6 @@ exports.editUserInfo = (req, res, next) => {
           inputUserData.birthDate = req.body.birthDate;
         }
 
-        // Edit password
-        if (req.body.password) {
-          inputUserData.password = hash(req.body.password);
-        }
-
         // Overwrite MongoDB document
         User.findByIdAndUpdate(req.user._id, { $set: inputUserData }, { new: true }, (err, result) => {
           if (err) { return next(err); }
@@ -121,5 +121,55 @@ exports.editUserInfo = (req, res, next) => {
       } else {
         res.json({ message: 'Error: User Not Found'});
       }
+    });
+}
+
+// Change Password
+exports.changePassword = (req, res, next) => {
+  User.findById(req.user._id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      // Verify user's current password before proceeding
+      bcrypt.compare(req.body.currentPassword, req.user.password, (err, result) => {
+          if (result) {
+            const inputUserData = {
+              password: hash(req.body.newPassword),
+              _id: req.user._id
+            }
+
+
+            // Update User Document in MongoDB
+            User.findByIdAndUpdate(req.user._id, { $set: inputUserData }, { new: true }, (err, result) => {
+              if (err) { return next(err); }
+
+              res.json({ message: 'success', user: result });
+            });
+          } else {
+            res.json({ message: 'ERROR: Current password is incorrect.'});
+          }
+        });
+      
+    })
+}
+
+// Delete Account
+exports.deleteUserAccount = (req, res, next) => {
+  User.findById(req.user._id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      // Verify user's current password before proceeding
+      bcrypt.compare(req.body.currentPassword, req.user.password, (err, result) => {
+        if (result) {
+          User.deleteOne({ uuid: req.user.uuid }, (err, user) => {
+            if (err) { return next(err); }
+
+            res.json({ message: 'success' });
+          });
+        } else {
+          res.json({ message: 'ERROR: Current password is incorrect.'});
+        }
+      });
     });
 }
