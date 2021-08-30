@@ -173,3 +173,25 @@ exports.deleteUserAccount = (req, res, next) => {
       });
     });
 }
+
+// Search for users using MongoDB Atlas Search
+/* 
+  NOTE: This cannot be unit tested as the test DB is not on Atlas. Only Atlas MongoDB supports elastic searches.
+  Tested manually using Postman
+*/
+exports.searchUsers = (req, res, next) => {
+  User.aggregate().search({
+    index: 'default',
+    text: {
+      query: req.params.query,
+      path: {
+        'wildcard': '*'
+      }
+    }
+  })
+  .exec((err, result) => {
+    if (err) { return next(err); }
+
+    res.json({ message: 'success', result: result });
+  })
+}

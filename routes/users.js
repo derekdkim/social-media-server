@@ -30,4 +30,7 @@ router.put('/edit-pw', passport.authenticate('jwt', { session: false }), userCon
 // DELETE: Delete user account
 router.delete('/delete-account', passport.authenticate('jwt', { session: false }), userController.deleteUserAccount);
 
+// GET: Search for user
+router.get('/search/:query', userController.searchUsers);
+
 module.exports = router;
