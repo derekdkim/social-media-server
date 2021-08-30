@@ -143,6 +143,7 @@ exports.displayPendingFriends = (req, res, next) => {
   }
 
   User.findById(req.user._id)
+    .populate('pendingFriends')
     .exec((err, user) => {
       if (err) { return next(err); }
 
@@ -158,6 +159,7 @@ exports.displayCurrentFriends = (req, res, next) => {
   }
   
   User.findById(req.user._id)
+    .populate('currentFriends')
     .exec((err, user) => {
       if (err) { return next(err); }
 
