@@ -5,6 +5,9 @@ const async = require('async');
 require('dotenv').config();
 
 const User = require('../models/user');
+const Comment = require('../models/comment');
+const Entry = require('../models/entry');
+const Journey = require('../models/journey');
 
 // New User Registration
 exports.signUp = (req, res, next) => {
@@ -160,9 +163,45 @@ exports.deleteUserAccount = (req, res, next) => {
       if (err) { return next(err); }
 
       // Verify user's current password before proceeding
-      bcrypt.compare(req.body.currentPassword, req.user.password, (err, result) => {
+      bcrypt.compare(req.body.currentPassword, user.password, (err, result) => {
         if (result) {
-          User.deleteOne({ uuid: req.user.uuid }, (err, user) => {
+          async.series([
+            function(callback) {
+              // Remove current friends
+              User.updateMany({ currentFriends: user._id }, { $pull: { currentFriends: user._id  } }, { new: true })
+                .exec(callback);
+            },
+            function(callback) {
+              // Remove pending friends
+              User.updateMany({ pendingFriends: user._id }, { $pull: { pendingFriends: user._id  } }, { new: true })
+                .exec(callback);
+            },
+            function(callback) {
+              // Remove reference from users who requested user as friend
+              User.updateMany({ myRequests: user._id }, { $pull: { myRequests: user._id  } }, { new: true })
+                .exec(callback);
+            },
+            function(callback) {
+              // Remove all comments posted by user
+              Comment.deleteMany({ author: user._id })
+                .exec(callback); 
+            },
+            function(callback) {
+              // Remove all entries posted by user
+              Entry.deleteMany({ author: user._id })
+                .exec(callback); 
+            },
+            function(callback) {
+              // Remove all comments posted by user
+              Journey.deleteMany({ author: user._id })
+                .exec(callback); 
+            },
+            function(callback) {
+              // Finally, delete the user document
+              User.deleteOne({ uuid: user.uuid })
+                .exec(callback);    
+            }
+          ], (err, results) => {
             if (err) { return next(err); }
 
             res.json({ message: 'success' });
