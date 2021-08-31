@@ -5,14 +5,13 @@ const passport = require('passport');
 const friendController = require('../controllers/friendController');
 
 // GET: Display friend list
-router.get('/all', friendController.displayCurrentFriends);
+router.get('/all', passport.authenticate('jwt', { session: false }), friendController.displayCurrentFriends);
 
 // GET: Display all pending friends
-router.get('/pending', friendController.displayPendingFriends);
+router.get('/pending', passport.authenticate('jwt', { session: false }), friendController.displayPendingFriends);
 
 /* Friend Request*/
-// REQUESTER USER: Make a friend request to target user ID
-// NOTE: Omitting passport.authenticate() for request results in 404 error for unknown reasons 
+// SENDER USER: Make a friend request to target user ID
 router.post('/:id/request', passport.authenticate('jwt', { session: false }), friendController.createFriendReq);
 
 // RECIPIENT USER: Accept friend request of target user ID

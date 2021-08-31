@@ -125,6 +125,8 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
+        expect(res.body.sender.myRequests.some(user => user.uuid === user1.uuid)).toBe(true);
+        expect(res.body.recipient.pendingFriends.some(user => user.uuid === user0.uuid)).toBe(true);
       })
       .then(() => { 
         done();
@@ -152,8 +154,13 @@ describe('Friend Request Test', () => {
       .set('Authorization', `Bearer ${token2}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
+        // Properly in each other's currentFriends
+        expect(res.body.sender.currentFriends.some(user => user.uuid === user2.uuid)).toBe(true);
+        expect(res.body.recipient.currentFriends.some(user => user.uuid === user0.uuid)).toBe(true);
+        // Properly removed from pending and myrequests
+        expect(res.body.sender.myRequests.some(user => user.uuid === user2.uuid)).toBe(false);
+        expect(res.body.recipient.pendingFriends.some(user => user.uuid === user0.uuid)).toBe(false);
       })
       .then(() => { 
         done();
@@ -183,6 +190,9 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
+        // Properly removed from pending and myrequests
+        expect(res.body.sender.myRequests.some(user => user.uuid === user0.uuid)).toBe(false);
+        expect(res.body.recipient.pendingFriends.some(user => user.uuid === user1.uuid)).toBe(false);
       })
       .then(() => { 
         done();
@@ -220,6 +230,12 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
+        // No traces of each other in all relevant fields
+        expect(res.body.sender.currentFriends.some(user => user.uuid === user3.uuid)).toBe(false);
+        expect(res.body.recipient.currentFriends.some(user => user.uuid === user0.uuid)).toBe(false);
+        // Properly removed from pending and myrequests
+        expect(res.body.sender.myRequests.some(user => user.uuid === user3.uuid)).toBe(false);
+        expect(res.body.recipient.pendingFriends.some(user => user.uuid === user0.uuid)).toBe(false);
       })
       .then(() => { 
         done();

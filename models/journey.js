@@ -7,8 +7,8 @@ const JourneySchema = new Schema ({
   desc: { type: String, default: 'Add a new description' },
   timestamp: { type: Date, default: new Date() },
   dueDate: { type: Date }, // Optional due date
-  participants: { type: Array, default: [] },
-  likedBy: { type: Array, default: [] },
+  participants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   tags: { type: Array, default: [] },
   privacy: { type: Number, min: 0, max: 2, default: 0 } // 0 - Public, 1 - Friends-only, 2 - Private
 }, { versionKey: false });

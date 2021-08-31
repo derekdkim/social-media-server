@@ -37,16 +37,6 @@ describe('JWT Authentication Test', () => {
       });
   });
 
-  it('User redirects to index page on log-out', async (done) => {
-    await request(app)
-      .get('/users/log-out')
-      .expect(302) // Supertest built-in assertion
-      .expect('Location', '/') // Supertest built-in assertion
-      .then(() => {
-        done();
-      });
-  });
-
   it('Cannot access secure route without auth header', async () => {
     await request(app)
       .get('/entries/')

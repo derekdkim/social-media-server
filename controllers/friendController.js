@@ -12,18 +12,20 @@ exports.createFriendReq = (req, res, next) => {
     sender: function(callback) {
       // Update Sender
       User.findByIdAndUpdate(req.user.id, { $push: { myRequests: req.params.id } }, { new: true })
+        .populate('myRequests')
         .exec(callback);
     },
     recipient: function(callback) {
       // Update Recipient
       User.findByIdAndUpdate(req.params.id, { $push: { pendingFriends: req.user.id } }, { new: true })
+        .populate('pendingFriends')
         .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
     
     // return relevant info for testing
-    res.json({ message: 'success' });
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -37,19 +39,21 @@ exports.acceptFriendReq = (req, res, next) => {
   async.parallel({
     sender: function(callback) {
       // Update Sender
-      User.findByIdAndUpdate(req.user.id, { $push: { currentFriends: req.params.id }, $pull: { myRequests: req.params.id } }, { new: true })
+      User.findByIdAndUpdate(req.params.id, { $push: { currentFriends: req.user.id }, $pull: { myRequests: req.user.id } }, { new: true })
+        .populate('currentFriends')
         .exec(callback);
     },
     recipient: function(callback) {
       // Update Recipient
-      User.findByIdAndUpdate(req.params.id, { $push: { currentFriends: req.user.id }, $pull: { endingFriends: req.user.id } }, { new: true })
+      User.findByIdAndUpdate(req.user.id, { $push: { currentFriends: req.params.id }, $pull: { pendingFriends: req.params.id } }, { new: true })
+        .populate('currentFriends')
         .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
     
     // return relevant info for testing
-    res.json({ message: 'success' });
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -64,19 +68,21 @@ exports.declineFriendReq = (req, res, next) => {
   async.parallel({
     sender: function(callback) {
       // Update Sender
-      User.findByIdAndUpdate(req.user.id, { $pull: { myRequests: req.params.id } }, { new: true })
+      User.findByIdAndUpdate(req.params.id, { $pull: { myRequests: req.user.id } }, { new: true })
+        .populate('myRequests')
         .exec(callback);
     },
     recipient: function(callback) {
       // Update Recipient
-      User.findByIdAndUpdate(req.params.id, { $pull: { pendingFriends: req.user.id } }, { new: true })
+      User.findByIdAndUpdate(req.user.id, { $pull: { pendingFriends: req.params.id } }, { new: true })
+        .populate('pendingFriends')
         .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
     
     // return relevant info for testing
-    res.json({ message: 'success' });
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 
@@ -92,18 +98,20 @@ exports.removeFriend = (req, res, next) => {
     sender: function(callback) {
       // Update Sender
       User.findByIdAndUpdate(req.user.id, { $pull: { currentFriends: req.params.id } }, { new: true })
+        .populate('currentFriends')
         .exec(callback);
     },
     recipient: function(callback) {
       // Update Recipient
       User.findByIdAndUpdate(req.params.id, { $pull: { currentFriends: req.user.id } }, { new: true })
+        .populate('currentFriends')
         .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
     
     // return relevant info for testing
-    res.json({ message: 'success' });
+    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
   });
 }
 

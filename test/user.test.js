@@ -75,6 +75,7 @@ describe('User Data Editing Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toBe('success');
         expect(res.body.user.uuid).toBe(user0.uuid);
+        expect(res.body.user.currentFriends).toStrictEqual([]);
       })
       .then(() => {
         done();

@@ -10,9 +10,9 @@ const UserSchema = new Schema({
   lastName: { type: String, required: true, minLength: 1 },
   birthDate: { type: Date, required: true },
   signupDate: { type: Date, default: new Date() },
-  currentFriends: { type: Array, default: [] },
-  myRequests: { type: Array, default: [] },
-  pendingFriends: { type: Array, default: [] },
+  currentFriends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  myRequests: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  pendingFriends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   profilePicUrl: { type: String }, // TODO: Cloudinary integration
   intro: { type: String, maxLength: 160, default: 'Share something about yourself.' },
   uuid: { type: String, default: UUID.v4 }
