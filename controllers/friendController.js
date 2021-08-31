@@ -8,27 +8,22 @@ exports.createFriendReq = (req, res, next) => {
     return next();
   }
 
-  // Find both sender and recipient user models from MongoDB
   async.parallel({
     sender: function(callback) {
-      User.findById(req.user.id).exec(callback);
+      // Update Sender
+      User.findByIdAndUpdate(req.user.id, { $push: { myRequests: req.params.id } }, { new: true })
+        .exec(callback);
     },
     recipient: function(callback) {
-      User.findById(req.params.id).exec(callback);
+      // Update Recipient
+      User.findByIdAndUpdate(req.params.id, { $push: { pendingFriends: req.user.id } }, { new: true })
+        .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
-
-    // Add each user's id to their documents so intermediary stages can be displayed on the client
-    results.sender.myRequests.push(results.recipient.id);
-    results.recipient.pendingFriends.push(results.sender.id);
-
-    // Save changes to MongoDB
-    results.sender.save();
-    results.recipient.save();
     
     // return relevant info for testing
-    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
+    res.json({ message: 'success' });
   });
 }
 
@@ -39,34 +34,22 @@ exports.acceptFriendReq = (req, res, next) => {
     return next();
   }
 
-  // Occurs after the recipient presses the Accept button
-  // Find both sender and recipient user models from MongoDB
   async.parallel({
     sender: function(callback) {
-      User.findById(req.params.id).exec(callback);
+      // Update Sender
+      User.findByIdAndUpdate(req.user.id, { $push: { currentFriends: req.params.id }, $pull: { myRequests: req.params.id } }, { new: true })
+        .exec(callback);
     },
     recipient: function(callback) {
-      User.findById(req.user.id).exec(callback);
+      // Update Recipient
+      User.findByIdAndUpdate(req.params.id, { $push: { currentFriends: req.user.id }, $pull: { endingFriends: req.user.id } }, { new: true })
+        .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
-
-    // Add each user's id to their friends list
-    results.sender.currentFriends.push(results.recipient.id);
-    results.recipient.currentFriends.push(results.sender.id);
-
-    // Remove the sender's id from recipient's pending list
-    results.recipient.pendingFriends.pull(results.sender.id);
-
-    // Remove the recipient's id from sender's requests list
-    results.sender.myRequests.pull(results.recipient.id);
-
-    // Save changes to MongoDB
-    results.sender.save();
-    results.recipient.save();
     
     // return relevant info for testing
-    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
+    res.json({ message: 'success' });
   });
 }
 
@@ -77,30 +60,23 @@ exports.declineFriendReq = (req, res, next) => {
     return next();
   }
 
-  // Find both sender and recipient user models from MongoDB
+  // Do the opposite ($pull) of the make request ($push) function
   async.parallel({
     sender: function(callback) {
-      User.findById(req.params.id).exec(callback);
+      // Update Sender
+      User.findByIdAndUpdate(req.user.id, { $pull: { myRequests: req.params.id } }, { new: true })
+        .exec(callback);
     },
     recipient: function(callback) {
-      User.findById(req.user.id).exec(callback);
+      // Update Recipient
+      User.findByIdAndUpdate(req.params.id, { $pull: { pendingFriends: req.user.id } }, { new: true })
+        .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
-
-    // Same as acceptFriendReq except omitting adding to currentFriends
-    // Remove the sender's id from recipient's pending list
-    results.recipient.pendingFriends.pull(results.sender.id);
-
-    // Remove the recipient's id from sender's requests list
-    results.sender.myRequests.pull(results.recipient.id);
-
-    // Save changes to MongoDB
-    results.sender.save();
-    results.recipient.save();
     
     // return relevant info for testing
-    res.json({ message: 'success', sender: results.sender, recipient: results.recipient });
+    res.json({ message: 'success' });
   });
 }
 
@@ -111,27 +87,23 @@ exports.removeFriend = (req, res, next) => {
     return next();
   }
 
-  // Find both sender and recipient user models from MongoDB
+  // Pull each other friend their currentFriends field
   async.parallel({
     sender: function(callback) {
-      User.findById(req.user.id).exec(callback);
+      // Update Sender
+      User.findByIdAndUpdate(req.user.id, { $pull: { currentFriends: req.params.id } }, { new: true })
+        .exec(callback);
     },
     recipient: function(callback) {
-      User.findById(req.params.id).exec(callback);
+      // Update Recipient
+      User.findByIdAndUpdate(req.params.id, { $pull: { currentFriends: req.user.id } }, { new: true })
+        .exec(callback);
     }
   }, async (err, results) => {
     if (err) { return next(err); }
-
-    // Remove each user's id from their respective friends list
-    results.sender.currentFriends.pull(results.recipient.id);
-    results.recipient.currentFriends.pull(results.sender.id);
-
-    // Save changes to MongoDB
-    results.sender.save();
-    results.recipient.save();
     
     // return relevant info for testing
-    res.json({ message: 'removal success', sender: results.sender, recipient: results.recipient });
+    res.json({ message: 'success' });
   });
 }
 

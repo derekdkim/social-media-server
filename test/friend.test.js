@@ -34,6 +34,20 @@ const userData = [
     firstName: 'Tester3',
     lastName: 'McTesterface',
     birthDate: new Date()
+  },
+  { 
+    username: 'testerFriend4', 
+    password: 'testest',
+    firstName: 'Tester3',
+    lastName: 'McTesterface',
+    birthDate: new Date()
+  },
+  { 
+    username: 'testerFriend5', 
+    password: 'testest',
+    firstName: 'Tester3',
+    lastName: 'McTesterface',
+    birthDate: new Date()
   }
 ];
 
@@ -75,9 +89,11 @@ const logInReq = async (username, done) => {
   Accept test: user0 --REQUEST--> (user2) --ACCEPT--> user0
   Decline test: user1 --REQUEST--> user0 --DECLINE--> user1
   Remove test: user0 --REQUEST--> user3 --ACCEPT--> user0 // user3 --REMOVE--> user0
+  
+  user4, user5 are used for auth debugging
 */
 describe('Friend Request Test', () => {
-  let token0, token1, token2, token3, user0, user1, user2, user3;
+  let token0, token1, token2, token3, token4, token5, user0, user1, user2, user3, user4, user5;
 
   beforeAll(async () => {
     // Register users
@@ -85,12 +101,16 @@ describe('Friend Request Test', () => {
     user1 = await signUpReq(userData[1]);
     user2 = await signUpReq(userData[2]);
     user3 = await signUpReq(userData[3]);
+    user4 = await signUpReq(userData[4]);
+    user5 = await signUpReq(userData[5]);
 
     // Log-in with users and record each token
     token0 = await logInReq(userData[0].username);
     token1 = await logInReq(userData[1].username);
     token2 = await logInReq(userData[2].username);
     token3 = await logInReq(userData[3].username);
+    token4 = await logInReq(userData[4].username);
+    token5 = await logInReq(userData[5].username);
   });
 
   it('User can send friend request to another user', async (done) => {
@@ -105,10 +125,6 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.sender._id).toBe(senderId);
-        expect(res.body.sender.myRequests).toContain(recipId);
-        expect(res.body.recipient._id).toBe(recipId);
-        expect(res.body.recipient.pendingFriends).toContain(senderId);
       })
       .then(() => { 
         done();
@@ -138,11 +154,6 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.recipient._id).toBe(recipId);
-        expect(res.body.recipient.currentFriends).toContain(senderId);
-        expect(res.body.sender.currentFriends).toContain(recipId);
-        expect(res.body.recipient.pendingFriends).not.toContain(senderId);
-        expect(res.body.sender.myRequests).not.toContain(recipId);
       })
       .then(() => { 
         done();
@@ -172,10 +183,6 @@ describe('Friend Request Test', () => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
         expect(res.body.message).toBe('success');
-        expect(res.body.recipient._id).toBe(recipId);
-        expect(res.body.recipient.currentFriends).not.toContain(senderId);
-        expect(res.body.recipient.pendingFriends).not.toContain(senderId);
-        expect(res.body.sender.myRequests).not.toContain(recipId);
       })
       .then(() => { 
         done();
@@ -203,8 +210,6 @@ describe('Friend Request Test', () => {
       .set('Authorization', `Bearer ${token3}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.recipient.currentFriends).toContain(senderId);
-        expect(res.body.sender.currentFriends).toContain(recipId);
       })
     
     // sender removes friend (recipient)
@@ -214,10 +219,7 @@ describe('Friend Request Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.type).toBe('application/json');
-        expect(res.body.message).toBe('removal success');
-        expect(res.body.recipient._id).toBe(recipId);
-        expect(res.body.recipient.currentFriends).not.toContain(senderId);
-        expect(res.body.sender.currentFriends).not.toContain(recipId);
+        expect(res.body.message).toBe('success');
       })
       .then(() => { 
         done();
@@ -231,12 +233,12 @@ describe('Friend Request Test', () => {
     // Send friend request from user1 to user0
     await request(app)
       .post(`/friends/${user0._id}/request`)
-      .set('Authorization', `Bearer ${token1}`)
+      .set('Authorization', `Bearer ${token1}`);
     
     // Send friend request from user2 to user0
     await request(app)
       .post(`/friends/${user0._id}/request`)
-      .set('Authorization', `Bearer ${token2}`)
+      .set('Authorization', `Bearer ${token2}`);
 
     // Get pending friend list
     await request(app)
@@ -250,6 +252,35 @@ describe('Friend Request Test', () => {
         });
       })
       .then(() => { 
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
+  // Solves a bug that prevents login after sending a friend request
+  it('User can still log in with a pending friend', async (done) => {
+    // Send friend request from user4 to user5
+    await request(app)
+      .post(`/friends/${user5._id}/request`)
+      .set('Authorization', `Bearer ${token4}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      });
+
+    // Log-out omitted since JWT-based auths don't "log out" manually unlike sessions.
+    
+    // Log in with user4
+    await request(app)
+      .post('/users/log-in')
+      .send({ username: 'testerFriend4', password: 'testest' })
+      .set('Accept', 'application/json')
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.user.uuid).toBe(user4.uuid);
+      })
+      .then(() => {
         done();
       })
       .catch(err => {

@@ -57,7 +57,6 @@ exports.logIn = (req, res, next) => {
 // Log Out
 exports.logOut = (req, res, next) => {
   req.logout();
-  res.redirect('/');
 }
 
 // Hash
