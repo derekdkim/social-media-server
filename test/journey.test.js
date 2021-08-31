@@ -47,7 +47,6 @@ const testInput = [
     title: 'Optionals Test Journey',
     desc: 'This is a simple test description.',
     dueDate: new Date(2021, 11, 17),
-    tags: ['test', 'art', 'life'],
     privacy: 0
   },
   {
@@ -137,7 +136,6 @@ describe('Journey Test', () => {
         expect(res.body.journey.desc).toStrictEqual(testInput[1].desc);
         expect(new Date(res.body.journey.timestamp).getTime()).not.toBe(NaN);
         expect(new Date(res.body.journey.dueDate).getTime()).not.toBe(NaN);
-        expect(res.body.journey.tags).toEqual(expect.arrayContaining(['life', 'test']));
       })
       .then(() => {
         done();
@@ -212,7 +210,7 @@ describe('Journey Test', () => {
       .set('Authorization', `Bearer ${token0}`)
       .send(newJourney)
       .then((res) => {
-        expect(res.body.message).toBe('edit success');
+        expect(res.body.message).toBe('success');
         expect(res.body.journey.title).toBe('New Title');
         expect(res.body.journey.privacy).toBe(2);
       })
@@ -298,7 +296,40 @@ describe('Journey Test', () => {
       });
   });
 
+  it('User can remove the dueDate from their journey', async (done) => {
+    let journeyId;
+
+    // Create journey with user0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[1])
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.journey.dueDate).toBeTruthy();
+        journeyId = res.body.journey._id;
+      })
+    
+    // Remove due date
+    await request(app)
+      .put(`/journeys/${journeyId}/remove-due-date`)
+      .set('Authorization', `Bearer ${token0}`)
+      .then((res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.journey.dueDate).toBeUndefined();
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        console.log('Failed');
+        done(err);
+      })
+  });
+
   it('User can view public journeys from other users', async (done) => {
+    let refJourney;
+
     // Create journey with user0
     await request(app)
       .post('/journeys/new')
@@ -306,6 +337,7 @@ describe('Journey Test', () => {
       .send(testInput[0])
       .then((res) => {
         expect(res.statusCode).toBe(200);
+        refJourney = res.body.journey;
       })
       .catch(err => {
         done(err);
@@ -318,6 +350,7 @@ describe('Journey Test', () => {
       .then((res) => {
         expect(res.statusCode).toBe(200);
         expect(res.body.journeys.length).toBeGreaterThan(0);
+        expect(res.body.journeys.some(journey => journey.title === refJourney.title)).toBe(true);
       })
       .then(() => {
         done();
@@ -328,6 +361,8 @@ describe('Journey Test', () => {
   });
 
   it('User cannot view friends-only journeys of non-friends', async (done) => {
+    let refJourney;
+
     // Create journey with user0
     await request(app)
       .post('/journeys/new')
@@ -335,6 +370,7 @@ describe('Journey Test', () => {
       .send(testInput[2])
       .then((res) => {
         expect(res.statusCode).toBe(200);
+        refJourney = res.body.journey;
       })
       .catch(err => {
         done(err);
@@ -346,7 +382,7 @@ describe('Journey Test', () => {
       .set('Authorization', `Bearer ${token1}`)
       .then((res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.body.journeys.length).toBe(0);
+        expect(res.body.journeys.some(journey => journey.title === refJourney.title)).toBe(false);
       })
       .then(() => {
         done();
@@ -517,11 +553,23 @@ describe('Journey Test', () => {
         done(err);
       });
       
-    // Create a new journey for user 1
+    // Create a new public journey for user 1
     await request(app)
       .post('/journeys/new')
       .set('Authorization', `Bearer ${token1}`)
       .send(testInput[0])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      })
+      .catch(err => {
+        done(err);
+      });
+
+    // Create a new private journey for user 1
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token1}`)
+      .send(testInput[3])
       .then(res => {
         expect(res.statusCode).toBe(200);
       })

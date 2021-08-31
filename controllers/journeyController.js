@@ -6,52 +6,65 @@ const User = require('../models/user');
 
 // Display all journeys viewable for user
 exports.displayAllJourneys = (req, res, next) => {
-  async.parallel({
-    public: function(callback) {
-      // Fetch all public journeys in the collection
-      Journey.find({ privacy: 0 })
-        .sort({ timestamp: -1 })
-        .populate('author')
-        .exec(callback);
-    },
-    friendsOnly: function(callback) {
-      const idList = [req.user._id, ...req.user.currentFriends];
+  // Fetch the user's up to date friend list
+  // NOTE: DO NOT POPULATE CURRENTFRIENDS AS IT WILL NO LONGER RETURN AN ARRAY OF ID
+  User.findById(req.user._id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
 
-      // Fetch friends-only journeys
-      Journey.find({ author: { $in: idList }, privacy: 1 })
-        .sort({ timestamp: -1 })
-        .populate('author')
-        .exec(callback);
-    },
-    myPrivate: function(callback) {
-      Journey.find({ author: req.user, privacy: 2 })
-        .sort({ timestamp: -1 })
-        .populate('author')
-        .exec(callback);
-    }
-  }, (err, results) => {
-    if (err) { return next(err); }
-    
-    // TODO: Deal with chronological sorting in combined journeys array
-    const journeyList = [...results.public, ...results.friendsOnly, ...results.myPrivate];
-    // Send combined journey list
-    res.json({ message: 'success', journeys: journeyList });
-  });
+      async.parallel({
+        public: function(callback) {
+          // Fetch all public journeys in the collection
+          Journey.find({ privacy: 0 })
+            .sort({ timestamp: -1 })
+            .populate('author')
+            .exec(callback);
+        },
+        friendsOnly: function(callback) {
+          const idList = [req.user._id, ...user.currentFriends];
+
+          // Fetch friends-only journeys
+          Journey.find({ author: { $in: idList }, privacy: 1 })
+            .sort({ timestamp: -1 })
+            .populate('author')
+            .exec(callback);
+        },
+        myPrivate: function(callback) {
+          Journey.find({ author: req.user, privacy: 2 })
+            .sort({ timestamp: -1 })
+            .populate('author')
+            .exec(callback);
+        }
+      }, (err, results) => {
+        if (err) { return next(err); }
+        
+        // TODO: Deal with chronological sorting in combined journeys array
+        const journeyList = [...results.public, ...results.friendsOnly, ...results.myPrivate];
+        // Send combined journey list
+        res.json({ message: 'success', journeys: journeyList });
+      });
+    });
   // TODO: Display only 10 at a time, with pages
 }
 
-// Display yours and friends' journeys
+// Display yours and friends' friends-only journeys
 exports.displayFriendsJourneys = (req, res, next) => {
-  const idList = [req.user._id, ...req.user.currentFriends];
-
-  // Fetch journeys with authors that are in friends' list except private journeys
-  Journey.find({ author: { $in: idList }, privacy: { $ne: 2 } })
-    .sort({ timestamp: -1 })
-    .populate('author')
-    .exec((err, journeys) => {
+  User.findById(req.user._id)
+    .exec((err, user) => {
       if (err) { return next(err); }
+      
+      const idList = [req.user._id, ...req.user.currentFriends];
 
-      res.json({ message: 'success', journeys: journeys });
+      // Fetch journeys with authors that are in friends' list except private journeys
+      Journey.find({ author: { $in: idList }, privacy: 1 })
+        .sort({ timestamp: -1 })
+        .populate('author')
+        .exec((err, journeys) => {
+          if (err) { return next(err); }
+
+          res.json({ message: 'success', journeys: journeys });
+        });
+
     });
 }
 
@@ -156,9 +169,18 @@ exports.editJourney = (req, res, next) => {
     if (err) { return next(err); }
 
     // success
-    res.json({ message: 'edit success', journey: result });
+    res.json({ message: 'success', journey: result });
   });
 };
+
+exports.removeDueDate = (req, res, next) => {
+  Journey.findByIdAndUpdate(req.params.id, { $unset: { dueDate: 1 } }, { new: true }, function(err, result) {
+    if (err) { return next(err); }
+
+    // success
+    res.json({ message: 'success', journey: result });
+  });
+}
 
 // Remove journey
 // TODO: Need to remove all entries and comments referencing this journey when it gets deleted

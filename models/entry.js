@@ -7,7 +7,7 @@ const EntrySchema = new Schema ({
   text: { type: String, required: true },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   timestamp: { type: Date, default: new Date() },
-  likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+  likedBy: [{ type: String }]
 }, { versionKey: false });
 
 module.exports = mongoose.model('Entry', EntrySchema);

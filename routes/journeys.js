@@ -27,6 +27,9 @@ router.get('/:id', journeyController.displayJourneyPage);
 // UPDATE: Update specified journey
 router.put('/:id', passport.authenticate('jwt', { session: false }), journeyController.editJourney);
 
+// UPDATE: Remove due date from journey
+router.put('/:id/remove-due-date', JWTauth, journeyController.removeDueDate);
+
 // DELETE: Delete specified journey
 router.delete('/:id', passport.authenticate('jwt', { session: false }), journeyController.deleteJourney);
 
