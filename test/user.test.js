@@ -200,6 +200,22 @@ describe('User Data Editing Test', () => {
       });
   });
 
+  it('Can fetch another users info', async (done) => {
+    await request(app)
+      .get(`/users/${user0._id}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.user.uuid).toBe(user0.uuid);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
   afterAll(async (done) => {
     await mongoose.connection.close();
     done();

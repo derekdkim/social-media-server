@@ -6,17 +6,17 @@ const journeyController = require('../controllers/journeyController');
 
 const JWTauth = passport.authenticate('jwt', { session: false });
 
-// UNTESTED
 // GET: Display all journeys
 router.get('/all', passport.authenticate('jwt', { session: false }), journeyController.displayAllJourneys);
 
-// UNTESTED
 // GET: Display friends' journeys
 router.get('/friends', passport.authenticate('jwt', { session: false }), journeyController.displayFriendsJourneys);
 
-// UNTESTED
 // GET: Display my journeys
 router.get('/private', passport.authenticate('jwt', { session: false }), journeyController.displayMyJourneys);
+
+// GET: Display participating journeys
+router.get('/participating', JWTauth, journeyController.displayParticipatingJourneys);
 
 // POST: Create new journey
 router.post('/new', passport.authenticate('jwt', { session: false }), journeyController.createJourney);

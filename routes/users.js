@@ -4,6 +4,8 @@ const passport = require('passport');
 
 const userController = require('../controllers/userController');
 
+const JWTauth = passport.authenticate('jwt', { session: false });
+
 // GET: Fetch users index
 router.get('/',  passport.authenticate('jwt', { session: false }), function(req, res, next) {
   res.send('Secure route index');
@@ -20,6 +22,9 @@ router.get('/log-out', userController.logOut)
 
 // GET: Get user's own info
 router.get('/get-myself', passport.authenticate('jwt', { session: false }), userController.getMyInfo);
+
+// GET: User Info
+router.get('/:id', userController.getUserInfo);
 
 // UPDATE: Edit user's own info
 router.put('/edit', passport.authenticate('jwt', { session: false }), userController.editUserInfo);

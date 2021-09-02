@@ -741,6 +741,50 @@ describe('Journey Test', () => {
 
   });
 
+  it('Users can display journeys they are a participant of', async (done) => {
+    let refJourney;
+
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[1])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        refJourney = res.body.journey;
+      });
+    
+    // User 1 attempts to join the above journey
+    await request(app)
+      .put(`/journeys/join/${refJourney._id}`)
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.participants.includes(user1.uuid)).toBe(true);
+      })
+      .catch((err) => {
+        done(err);
+      });
+    
+    // Display participating journeys for user 1
+    await request(app)
+      .get('/journeys/participating')
+      .set('Authorization', `Bearer ${token1}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        res.body.journeys.forEach(journey => {
+          expect(journey.title).toBe(refJourney.title);
+        });
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
+
 
   afterAll(async (done) => {
     await mongoose.connection.close();

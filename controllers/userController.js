@@ -82,6 +82,16 @@ exports.getMyInfo = (req, res, next) => {
     });
 }
 
+// Get User Data
+exports.getUserInfo = (req, res, next) => {
+  User.findById(req.params.id)
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      res.json({ message: 'success', user: user });
+    });
+}
+
 // Edit User Data
 exports.editUserInfo = (req, res, next) => {
   User.findById(req.user._id)

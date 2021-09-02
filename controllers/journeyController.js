@@ -56,7 +56,7 @@ exports.displayFriendsJourneys = (req, res, next) => {
       const idList = [req.user._id, ...req.user.currentFriends];
 
       // Fetch journeys with authors that are in friends' list except private journeys
-      Journey.find({ author: { $in: idList }, privacy: 1 })
+      Journey.find({ author: { $in: idList }, privacy: { $lt: 2 } })
         .sort({ timestamp: -1 })
         .populate('author')
         .exec((err, journeys) => {
@@ -64,7 +64,6 @@ exports.displayFriendsJourneys = (req, res, next) => {
 
           res.json({ message: 'success', journeys: journeys });
         });
-
     });
 }
 
@@ -72,6 +71,19 @@ exports.displayFriendsJourneys = (req, res, next) => {
 exports.displayMyJourneys = (req, res, next) => {
   // Fetch journey with author matching req.user.id
   Journey.find({ author: req.user._id })
+    .sort({ timestamp: -1 })
+    .populate('author')
+    .exec((err, journeys) => {
+      if (err) { return next(err); }
+
+      res.json({ message: 'success', journeys: journeys });
+    });
+}
+
+// Display journeys the user is a participant of
+exports.displayParticipatingJourneys = (req, res, next) => {
+  // Fetch journey with user's uuid in participants
+  Journey.find({ participants: req.user.uuid })
     .sort({ timestamp: -1 })
     .populate('author')
     .exec((err, journeys) => {
