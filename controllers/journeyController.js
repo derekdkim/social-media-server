@@ -93,6 +93,42 @@ exports.displayParticipatingJourneys = (req, res, next) => {
     });
 }
 
+// Display other user's public journeys
+exports.displayUserJourneys = (req, res, next) => {
+  // Fetch journey according to friendship
+  User.findById(req.params.id)
+    .populate('currentFriends')
+    .exec((err, user) => {
+      if (err) { return next(err); }
+
+      let areFriends = false;
+      // Determine if requesting user and target user are friends
+      if (user.currentFriends.some(friend => friend.uuid === req.user.uuid)) {
+        // Allow access to friends-only journeys
+        areFriends = true;
+      }
+
+      if (areFriends) {
+        Journey.find({ author: req.params.id, privacy: { $lt: 2 } })
+          .populate('author')
+          .exec((err, journeys) => {
+            if (err) { return next(err); }
+
+            res.json({ message: 'success', areFriends: areFriends, journeys: journeys });
+          });
+      } else {
+        // Same as above but exclude privacy: 1 journeys (friends-only)
+        Journey.find({ author: req.params.id, privacy: 0 })
+          .populate('author')
+          .exec((err, journeys) => {
+            if (err) { return next(err); }
+
+            res.json({ message: 'success', areFriends: areFriends, journeys: journeys });
+          });
+      }
+    });
+}
+
 // Display journey page details
 exports.displayJourneyPage = async (req, res, next) => {
   // Fetch journey with specified url as id

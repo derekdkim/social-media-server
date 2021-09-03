@@ -18,6 +18,9 @@ router.get('/private', passport.authenticate('jwt', { session: false }), journey
 // GET: Display participating journeys
 router.get('/participating', JWTauth, journeyController.displayParticipatingJourneys);
 
+// GET: Display other user's journeys
+router.get('/user-journeys/:id', JWTauth, journeyController.displayUserJourneys);
+
 // POST: Create new journey
 router.post('/new', passport.authenticate('jwt', { session: false }), journeyController.createJourney);
 

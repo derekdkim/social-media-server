@@ -785,6 +785,50 @@ describe('Journey Test', () => {
       });
   });
 
+  it('Show friends-only journeys when viewing journeys on friends profile', async (done) => {
+    // User 0 sends User 2 a friend request
+    await request(app)
+      .post(`/friends/${user2._id}/request`)
+      .set('Authorization', `Bearer ${token0}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+      });
+    
+    // User 2 accepts user 0's friend request
+    await request(app)
+      .put(`/friends/${user0._id}/accept`)
+      .set('Authorization', `Bearer ${token2}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.sender.uuid).toBe(user0.uuid);
+      });
+    
+    let refJourney;
+    // Create new journey for user 0
+    await request(app)
+      .post('/journeys/new')
+      .set('Authorization', `Bearer ${token0}`)
+      .send(testInput[2])
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        refJourney = res.body.journey;
+      });
+    
+    // User 2 attempts to view user 0's journeys
+    await request(app)
+      .get(`/journeys/user-journeys/${user0._id}`)
+      .set('Authorization', `Bearer ${token2}`)
+      .then(res => {
+        expect(res.statusCode).toBe(200);
+        expect(res.body.journeys.some(journey => journey.privacy === 1 && journey.title === refJourney.title)).toBe(true);
+      })
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        done(err);
+      });
+  });
 
   afterAll(async (done) => {
     await mongoose.connection.close();

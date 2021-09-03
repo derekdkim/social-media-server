@@ -85,6 +85,7 @@ exports.getMyInfo = (req, res, next) => {
 // Get User Data
 exports.getUserInfo = (req, res, next) => {
   User.findById(req.params.id)
+    .populate('currentFriends')
     .exec((err, user) => {
       if (err) { return next(err); }
 
