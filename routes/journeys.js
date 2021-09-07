@@ -7,13 +7,13 @@ const journeyController = require('../controllers/journeyController');
 const JWTauth = passport.authenticate('jwt', { session: false });
 
 // GET: Display all journeys
-router.get('/all', passport.authenticate('jwt', { session: false }), journeyController.displayAllJourneys);
+router.get('/all', JWTauth, journeyController.displayAllJourneys);
 
 // GET: Display friends' journeys
-router.get('/friends', passport.authenticate('jwt', { session: false }), journeyController.displayFriendsJourneys);
+router.get('/friends', JWTauth, journeyController.displayFriendsJourneys);
 
 // GET: Display my journeys
-router.get('/private', passport.authenticate('jwt', { session: false }), journeyController.displayMyJourneys);
+router.get('/private', JWTauth, journeyController.displayMyJourneys);
 
 // GET: Display participating journeys
 router.get('/participating', JWTauth, journeyController.displayParticipatingJourneys);
@@ -22,25 +22,25 @@ router.get('/participating', JWTauth, journeyController.displayParticipatingJour
 router.get('/user-journeys/:id', JWTauth, journeyController.displayUserJourneys);
 
 // POST: Create new journey
-router.post('/new', passport.authenticate('jwt', { session: false }), journeyController.createJourney);
+router.post('/new', JWTauth, journeyController.createJourney);
 
 // GET: Display journey details
 router.get('/:id', journeyController.displayJourneyPage);
 
 // UPDATE: Update specified journey
-router.put('/:id', passport.authenticate('jwt', { session: false }), journeyController.editJourney);
+router.put('/:id', JWTauth, journeyController.editJourney);
 
 // UPDATE: Remove due date from journey
 router.put('/:id/remove-due-date', JWTauth, journeyController.removeDueDate);
 
 // DELETE: Delete specified journey
-router.delete('/:id', passport.authenticate('jwt', { session: false }), journeyController.deleteJourney);
+router.delete('/:id', JWTauth, journeyController.deleteJourney);
 
 // UPDATE: Like specified journey
-router.put('/like/:id', passport.authenticate('jwt', { session: false }), journeyController.likeJourney);
+router.put('/like/:id', JWTauth, journeyController.likeJourney);
 
 // UPDATE: Unlike specified journey
-router.put('/unlike/:id', passport.authenticate('jwt', { session: false }), journeyController.unlikeJourney);
+router.put('/unlike/:id', JWTauth, journeyController.unlikeJourney);
 
 // UPDATE: Join specified journey as participant
 router.put('/join/:id', JWTauth, journeyController.joinJourney);

@@ -9,7 +9,7 @@ const JourneySchema = new Schema ({
   dueDate: { type: Date }, // Optional due date
   participants: [{ type: String }],
   likedBy: [{ type: String }],
-  tags: { type: Array, default: [] },
+  tags: { type: Array, default: [] }, // Not implemented
   privacy: { type: Number, min: 0, max: 2, default: 0 } // 0 - Public, 1 - Friends-only, 2 - Private
 }, { versionKey: false });
 
